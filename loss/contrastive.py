@@ -15,15 +15,14 @@ class BalSCL(nn.Module):
         self.cls_num_list = cls_num_list
 
     def forward(self, centers1, features, targets, ):
-
-        device = (torch.device('cuda')
+        device = (torch.device('cuda:0')
                   if features.is_cuda
                   else torch.device('cpu'))
         batch_size = features.shape[0]
         targets = targets.contiguous().view(-1, 1)
         targets_centers = torch.arange(len(self.cls_num_list), device=device).view(-1, 1)
         targets = torch.cat([targets.repeat(2, 1), targets_centers], dim=0)
-        batch_cls_count = torch.eye(len(self.cls_num_list))[targets].sum(dim=0).squeeze()
+        batch_cls_count = torch.eye(len(self.cls_num_list)).to(device)[targets].sum(dim=0).squeeze()
 
         mask = torch.eq(targets[:2 * batch_size], targets.T).float().to(device)
         logits_mask = torch.scatter(

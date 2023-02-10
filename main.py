@@ -8,9 +8,9 @@ from loss.contrastive import BalSCL
 from loss.logitadjust import LogitAdjust
 import math
 from tensorboardX import SummaryWriter
-from dataset.inat import INaturalist
-from dataset.imagenet import ImageNetLT
-from models import resnet_big, resnext
+from dataset.mydataset import MyDataset
+# from dataset.imagenet import ImageNetLT
+from models import resnext
 import warnings
 import torch.backends.cudnn as cudnn
 import random
@@ -22,15 +22,16 @@ import argparse
 import os
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--dataset', default='imagenet', choices=['inat', 'imagenet'])
-parser.add_argument('--data', default='/DATACENTER/raid5/zjg/imagenet', metavar='DIR')
+parser.add_argument('--dataset', default='isic', choices=['inat', 'isic'])
+parser.add_argument('--data', default='/nfs/users/ext_group6/data/ISIC2018_Task3_Training_Input/', metavar='DIR')
+parser.add_argument('--val_data', default='/nfs/users/ext_group6/data/ISIC2018_Task3_Validation_Input/', metavar='DIR')
 parser.add_argument('--arch', default='resnext50', choices=['resnet50', 'resnext50'])
 parser.add_argument('--workers', default=12, type=int)
 parser.add_argument('--epochs', default=90, type=int)
 parser.add_argument('--temp', default=0.07, type=float, help='scalar temperature for contrastive learning')
 parser.add_argument('--start_epoch', default=0, type=int, metavar='N',
                     help='manual epoch number (useful on restarts)')
-parser.add_argument('-b', '--batch-size', default=256, type=int,
+parser.add_argument('-b', '--batch-size', default=128, type=int,
                     metavar='N',
                     help='mini-batch size (default: 256), this is the total '
                          'batch size of all GPUs on the current node when '
@@ -50,7 +51,7 @@ parser.add_argument('-e', '--evaluate', dest='evaluate', action='store_true',
                     help='evaluate model on validation set')
 parser.add_argument('--resume', default='', type=str, metavar='PATH',
                     help='path to latest checkpoint (default: none)')
-parser.add_argument('--gpu', default=None, type=int,
+parser.add_argument('--gpu', default='0', type=int,
                     help='GPU id to use.')
 parser.add_argument('--alpha', default=1.0, type=float, help='cross entropy loss weight')
 parser.add_argument('--beta', default=0.35, type=float, help='supervised contrastive loss weight')
@@ -91,6 +92,7 @@ def main():
         warnings.warn('You have chosen a specific GPU. This will completely '
                       'disable data parallelism.')
     ngpus_per_node = torch.cuda.device_count()
+
     main_worker(args.gpu, ngpus_per_node, args)
 
 
@@ -99,13 +101,101 @@ def main_worker(gpu, ngpus_per_node, args):
     if args.gpu is not None:
         print("Use GPU: {} for training".format(args.gpu))
 
+    ##########################################
+    txt_train = f'/nfs/users/ext_group6/data/ISIC2018_Task3_Training_GroundTruth.txt' if args.dataset == 'isic' \
+        else f'dataset/iNaturalist18/iNaturalist18_train.txt'
+    txt_val = f'/nfs/users/ext_group6/data/ISIC2018_Task3_Validation_GroundTruth.txt' if args.dataset == 'isic' \
+        else f'dataset/iNaturalist18/iNaturalist18_val.txt'
+
+    normalize = transforms.Normalize((0.466, 0.471, 0.380), (0.195, 0.194, 0.192)) if args.dataset == 'inat' \
+        else transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))
+
+    rgb_mean = (0.485, 0.456, 0.406)
+    ra_params = dict(translate_const=int(224 * 0.45), img_mean=tuple([min(255, round(255 * x)) for x in rgb_mean]), )
+    augmentation_randncls = [
+        transforms.RandomResizedCrop(224, scale=(0.08, 1.)),
+        transforms.RandomHorizontalFlip(),
+        transforms.RandomApply([
+            transforms.ColorJitter(0.4, 0.4, 0.4, 0.0)
+        ], p=1.0),
+        rand_augment_transform('rand-n{}-m{}-mstd0.5'.format(args.randaug_n, args.randaug_m), ra_params),
+        transforms.ToTensor(),
+        normalize,
+    ]
+    augmentation_randnclsstack = [
+        transforms.RandomResizedCrop(224),
+        transforms.RandomHorizontalFlip(),
+        transforms.RandomApply([
+            transforms.ColorJitter(0.4, 0.4, 0.4, 0.1)
+        ], p=0.8),
+        # transforms.RandomGrayscale(p=0.2),
+        rand_augment_transform('rand-n{}-m{}-mstd0.5'.format(args.randaug_n, args.randaug_m), ra_params),
+        transforms.ToTensor(),
+        normalize,
+    ]
+    augmentation_sim = [
+        transforms.RandomResizedCrop(224),
+        transforms.RandomHorizontalFlip(),
+        transforms.RandomApply([
+            transforms.ColorJitter(0.4, 0.4, 0.4, 0.1)  # not strengthened
+        ], p=0.8),
+        # transforms.RandomGrayscale(p=0.2),
+        transforms.ToTensor(),
+        normalize
+    ]
+    if args.cl_views == 'sim-sim':
+        transform_train = [transforms.Compose(augmentation_randncls), transforms.Compose(augmentation_sim),
+                           transforms.Compose(augmentation_sim), ]
+    elif args.cl_views == 'sim-rand':
+        transform_train = [transforms.Compose(augmentation_randncls), transforms.Compose(augmentation_randnclsstack),
+                           transforms.Compose(augmentation_sim), ]
+    elif args.cl_views == 'randstack-randstack':
+        transform_train = [transforms.Compose(augmentation_randncls), transforms.Compose(augmentation_randnclsstack),
+                           transforms.Compose(augmentation_randnclsstack), ]
+    else:
+        raise NotImplementedError("This augmentations strategy is not available for contrastive learning branch!")
+    val_transform = transforms.Compose([
+        transforms.Resize(256),
+        transforms.CenterCrop(224),
+        transforms.ToTensor(),
+        normalize
+    ])
+
+    val_dataset = MyDataset(
+        root=args.val_data,
+        txt=txt_val,
+        transform=val_transform, train=False,
+    )
+    train_dataset = MyDataset(
+        root=args.data,
+        txt=txt_train,
+        transform=transform_train
+    )
+
+    cls_num_list = train_dataset.cls_num_list
+    args.cls_num = len(cls_num_list)
+
+    train_sampler = None
+
+    train_loader = torch.utils.data.DataLoader(
+        train_dataset, batch_size=args.batch_size, shuffle=(train_sampler is None),
+        num_workers=args.workers, pin_memory=True)
+
+    val_loader = torch.utils.data.DataLoader(
+        val_dataset, batch_size=args.batch_size, shuffle=False,
+        num_workers=args.workers, pin_memory=True)
+
+
+
+    ##########################################
+
     # create model
     print("=> creating model '{}'".format(args.arch))
     if args.arch == 'resnet50':
-        model = resnext.BCLModel(name='resnet50', num_classes=num_classes, feat_dim=args.feat_dim,
+        model = resnext.BCLModel(name='resnet50', num_classes=args.cls_num, feat_dim=args.feat_dim,
                                  use_norm=args.use_norm)
     elif args.arch == 'resnext50':
-        model = resnext.BCLModel(name='resnext50', num_classes=num_classes, feat_dim=args.feat_dim,
+        model = resnext.BCLModel(name='resnext50', num_classes=args.cls_num, feat_dim=args.feat_dim,
                                  use_norm=args.use_norm)
     else:
         raise NotImplementedError('This model is not supported')
@@ -138,96 +228,7 @@ def main_worker(gpu, ngpus_per_node, args):
 
     cudnn.benchmark = True
 
-    txt_train = f'dataset/ImageNet_LT/ImageNet_LT_train.txt' if args.dataset == 'imagenet' \
-        else f'dataset/iNaturalist18/iNaturalist18_train.txt'
-    txt_val = f'dataset/ImageNet_LT/ImageNet_LT_val.txt' if args.dataset == 'imagenet' \
-        else f'dataset/iNaturalist18/iNaturalist18_val.txt'
-
-    normalize = transforms.Normalize((0.466, 0.471, 0.380), (0.195, 0.194, 0.192)) if args.dataset == 'inat' \
-        else transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))
-
-    rgb_mean = (0.485, 0.456, 0.406)
-    ra_params = dict(translate_const=int(224 * 0.45), img_mean=tuple([min(255, round(255 * x)) for x in rgb_mean]), )
-    augmentation_randncls = [
-        transforms.RandomResizedCrop(224, scale=(0.08, 1.)),
-        transforms.RandomHorizontalFlip(),
-        transforms.RandomApply([
-            transforms.ColorJitter(0.4, 0.4, 0.4, 0.0)
-        ], p=1.0),
-        rand_augment_transform('rand-n{}-m{}-mstd0.5'.format(args.randaug_n, args.randaug_m), ra_params),
-        transforms.ToTensor(),
-        normalize,
-    ]
-    augmentation_randnclsstack = [
-        transforms.RandomResizedCrop(224),
-        transforms.RandomHorizontalFlip(),
-        transforms.RandomApply([
-            transforms.ColorJitter(0.4, 0.4, 0.4, 0.1)
-        ], p=0.8),
-        transforms.RandomGrayscale(p=0.2),
-        rand_augment_transform('rand-n{}-m{}-mstd0.5'.format(args.randaug_n, args.randaug_m), ra_params),
-        transforms.ToTensor(),
-        normalize,
-    ]
-    augmentation_sim = [
-        transforms.RandomResizedCrop(224),
-        transforms.RandomHorizontalFlip(),
-        transforms.RandomApply([
-            transforms.ColorJitter(0.4, 0.4, 0.4, 0.1)  # not strengthened
-        ], p=0.8),
-        transforms.RandomGrayscale(p=0.2),
-        transforms.ToTensor(),
-        normalize
-    ]
-    if args.cl_views == 'sim-sim':
-        transform_train = [transforms.Compose(augmentation_randncls), transforms.Compose(augmentation_sim),
-                           transforms.Compose(augmentation_sim), ]
-    elif args.cl_views == 'sim-rand':
-        transform_train = [transforms.Compose(augmentation_randncls), transforms.Compose(augmentation_randnclsstack),
-                           transforms.Compose(augmentation_sim), ]
-    elif args.cl_views == 'randstack-randstack':
-        transform_train = [transforms.Compose(augmentation_randncls), transforms.Compose(augmentation_randnclsstack),
-                           transforms.Compose(augmentation_randnclsstack), ]
-    else:
-        raise NotImplementedError("This augmentations strategy is not available for contrastive learning branch!")
-    val_transform = transforms.Compose([
-        transforms.Resize(256),
-        transforms.CenterCrop(224),
-        transforms.ToTensor(),
-        normalize
-    ])
-
-    val_dataset = INaturalist(
-        root=args.data,
-        txt=txt_val,
-        transform=val_transform, train=False,
-    ) if args.dataset == 'inat' else ImageNetLT(
-        root=args.data,
-        txt=txt_val,
-        transform=val_transform, train=False)
-
-    train_dataset = INaturalist(
-        root=args.data,
-        txt=txt_train,
-        transform=transform_train
-    ) if args.dataset == 'inat' else ImageNetLT(
-        root=args.data,
-        txt=txt_train,
-        transform=transform_train)
-
-    cls_num_list = train_dataset.cls_num_list
-    args.cls_num = len(cls_num_list)
-
-    train_sampler = None
-
-    train_loader = torch.utils.data.DataLoader(
-        train_dataset, batch_size=args.batch_size, shuffle=(train_sampler is None),
-        num_workers=args.workers, pin_memory=True)
-
-    val_loader = torch.utils.data.DataLoader(
-        val_dataset, batch_size=args.batch_size, shuffle=False,
-        num_workers=args.workers, pin_memory=True)
-
+    
     criterion_ce = LogitAdjust(cls_num_list).cuda(args.gpu)
     criterion_scl = BalSCL(cls_num_list, args.temp).cuda(args.gpu)
 
@@ -237,21 +238,18 @@ def main_worker(gpu, ngpus_per_node, args):
     best_many, best_med, best_few = 0.0, 0.0, 0.0
 
     if args.reload:
-        txt_test = f'dataset/ImageNet_LT/ImageNet_LT_test.txt' if args.dataset == 'imagenet' \
+        txt_test = f'/nfs/users/ext_group6/data/ISIC2018_Task3_Validation_GroundTruth.txt' if args.dataset == 'isic' \
             else f'dataset/iNaturalist18/iNaturalist18_val.txt'
-        test_dataset = INaturalist(
+        test_dataset = MyDataset(
             root=args.data,
             txt=txt_test,
             transform=val_transform, train=False
-        ) if args.dataset == 'inat' else ImageNetLT(
-            root=args.data,
-            txt=txt_test,
-            transform=val_transform, train=False)
+        )
 
         test_loader = torch.utils.data.DataLoader(
             test_dataset, batch_size=args.batch_size, shuffle=False,
             num_workers=args.workers, pin_memory=True)
-        acc1, many, med, few = validate(train_loader, test_loader, model, criterion_ce, 1, args, tf_writer)
+        acc1, many, med, few = validate(train_loader, val_loader, model, criterion_ce, 1, args, tf_writer)
         print('Prec@1: {:.3f}, Many Prec@1: {:.3f}, Med Prec@1: {:.3f}, Few Prec@1: {:.3f}'.format(acc1,
                                                                                                    many,
                                                                                                    med,
@@ -331,9 +329,9 @@ def train(train_loader, model, criterion_ce, criterion_scl, optimizer, epoch, ar
                 epoch, i, len(train_loader), batch_time=batch_time,
                 ce_loss=ce_loss_all, scl_loss=scl_loss_all, top1=top1, ))  # TODO
             print(output)
-     tf_writer.add_scalar('CE loss/train', ce_loss_all.avg, epoch)
-     tf_writer.add_scalar('SCL loss/train', scl_loss_all.avg, epoch)
-     tf_writer.add_scalar('acc/train_top1', top1.avg, epoch)
+    tf_writer.add_scalar('CE loss/train', ce_loss_all.avg, epoch)
+    tf_writer.add_scalar('SCL loss/train', scl_loss_all.avg, epoch)
+    tf_writer.add_scalar('acc/train_top1', top1.avg, epoch)
 
 
 def validate(train_loader, val_loader, model, criterion_ce, epoch, args, tf_writer=None, flag='val'):

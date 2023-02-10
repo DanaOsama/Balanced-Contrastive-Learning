@@ -5,25 +5,30 @@ from PIL import Image
 import random
 
 
-class ImageNetLT(Dataset):
-
-    def __init__(self, root, txt, transform=None, train=True, class_balance=False):
+class MyDataset(Dataset):
+    
+    # root: path to the images directory
+    # txt: path to the txt file containing the image names and labels
+    def __init__(self, root, txt, transform=None, train=True, class_balance=False, num_classes=7):
         self.img_path = []
         self.labels = []
         self.transform = transform
-        self.num_classes = 1000
+        self.num_classes = num_classes
         self.train = train
         self.class_balance = class_balance
         with open(txt) as f:
             for line in f:
-                self.img_path.append(os.path.join(root, line.split()[0]))
+                self.img_path.append(os.path.join(root, line.split()[0]+".jpg"))
                 self.labels.append(int(line.split()[1]))
 
+        # creates an empty list for each class
+        # append the index of the image to the class_data list
         self.class_data = [[] for i in range(self.num_classes)]
         for i in range(len(self.labels)):
             y = self.labels[i]
             self.class_data[y].append(i)
 
+        # count the number of images in each class
         self.cls_num_list = [len(self.class_data[i]) for i in range(self.num_classes)]
 
     def __len__(self):
