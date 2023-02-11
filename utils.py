@@ -16,7 +16,23 @@ class GaussianBlur(object):
         return x
 
 
-def shot_acc(preds, labels, train_data, many_shot_thr=100, low_shot_thr=20, acc_per_cls=False):
+def shot_acc(preds, labels, train_data, many_shot_thr=1000, low_shot_thr=200, acc_per_cls=False):
+    """
+    It takes in the predictions and labels of a model, the training data, and thresholds for what
+    constitutes a "many-shot" class, a "low-shot" class, and a "median-shot" class. It then returns the
+    accuracy of the model on the many-shot, median-shot, and low-shot classes
+    
+    :param preds: the predictions of the model
+    :param labels: the labels of the test set
+    :param train_data: the training data
+    :param many_shot_thr: the number of training samples per class that is considered "many shot",
+    defaults to 100 (optional)
+    :param low_shot_thr: the number of training samples per class below which we consider a class to be
+    low-shot, defaults to 20 (optional)
+    :param acc_per_cls: If True, returns a list of accuracies for each class, defaults to False
+    (optional)
+    :return: The mean of the many shot, median shot, and low shot accuracies.
+    """
     if isinstance(train_data, np.ndarray):
         training_labels = np.array(train_data).astype(int)
     else:
@@ -40,6 +56,7 @@ def shot_acc(preds, labels, train_data, many_shot_thr=100, low_shot_thr=20, acc_
     many_shot = []
     median_shot = []
     low_shot = []
+
     for i in range(len(train_class_count)):
         if train_class_count[i] > many_shot_thr:
             many_shot.append((class_correct[i] / test_class_count[i]))
@@ -47,7 +64,9 @@ def shot_acc(preds, labels, train_data, many_shot_thr=100, low_shot_thr=20, acc_
             low_shot.append((class_correct[i] / test_class_count[i]))
         else:
             median_shot.append((class_correct[i] / test_class_count[i]))
-
+    print('many shot count: ', len(many_shot))
+    print('median shot count: ', len(median_shot))
+    print('low shot count: ', len(low_shot))
     if len(many_shot) == 0:
         many_shot.append(0)
     if len(median_shot) == 0:
