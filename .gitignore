@@ -1,2 +1,6 @@
 log/
 slurm-logs/
+__pycache__/
+dataset/__pycache__/
+loss/__pycache__/
+models/__pycache__
