@@ -20,13 +20,15 @@ from utils import GaussianBlur, shot_acc
 # from torch.models.tensorboard import SummaryWriter
 import argparse
 import os
+from sklearn.metrics import f1_score
+from tqdm import tqdm
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--dataset', default='isic', choices=['inat', 'isic'])
 parser.add_argument('--data', default='/nfs/users/ext_group6/data/ISIC2018_Task3_Training_Input/', metavar='DIR')
 parser.add_argument('--val_data', default='/nfs/users/ext_group6/data/ISIC2018_Task3_Validation_Input/', metavar='DIR')
 parser.add_argument('--arch', default='resnext50', choices=['resnet50', 'resnext50'])
-parser.add_argument('--workers', default=12, type=int)
+parser.add_argument('--workers', default=16, type=int)
 parser.add_argument('--epochs', default=90, type=int)
 parser.add_argument('--temp', default=0.07, type=float, help='scalar temperature for contrastive learning')
 parser.add_argument('--start_epoch', default=0, type=int, metavar='N',
@@ -45,7 +47,7 @@ parser.add_argument('--momentum', default=0.9, type=float, metavar='M',
 parser.add_argument('--wd', '--weight-decay', default=5e-4, type=float,
                     metavar='W', help='weight decay (default: 1e-4)',
                     dest='weight_decay')
-parser.add_argument('-p', '--print-freq', default=20, type=int,
+parser.add_argument('-p', '--print_freq', default=3, type=int,
                     metavar='N', help='print frequency (default: 20)')
 parser.add_argument('-e', '--evaluate', dest='evaluate', action='store_true',
                     help='evaluate model on validation set')
@@ -74,9 +76,10 @@ parser.add_argument('--reload', default=False, type=bool, help='load supervised 
 
 def main():
     args = parser.parse_args()
+    print(args)
     args.store_name = '_'.join(
         [args.dataset, args.arch, 'batchsize', str(args.batch_size), 'epochs', str(args.epochs), 'temp', str(args.temp),
-         'lr', str(args.lr), args.cl_views])
+         'lr', str(args.lr), args.cl_views, 'alpha', str(args.alpha), 'beta', str(args.beta)])
 
     if args.seed is not None:
         random.seed(args.seed)
@@ -295,7 +298,7 @@ def train(train_loader, model, criterion_ce, criterion_scl, optimizer, epoch, ar
 
     model.train()
     end = time.time()
-    for i, data in enumerate(train_loader):
+    for i, data in enumerate(tqdm(train_loader)):
         inputs, targets = data
         inputs = torch.cat([inputs[0], inputs[1], inputs[2]], dim=0)
         inputs, targets = inputs.cuda(), targets.cuda()
@@ -312,6 +315,7 @@ def train(train_loader, model, criterion_ce, criterion_scl, optimizer, epoch, ar
         ce_loss_all.update(ce_loss.item(), batch_size)
         scl_loss_all.update(scl_loss.item(), batch_size)
         acc1 = accuracy(logits, targets, topk=(1,))
+        f1_acc = f1(logits, targets)
         top1.update(acc1[0].item(), batch_size)
 
         optimizer.zero_grad()
@@ -322,13 +326,14 @@ def train(train_loader, model, criterion_ce, criterion_scl, optimizer, epoch, ar
         end = time.time()
 
         if i % args.print_freq == 0:
-            output = ('Epoch: [{0}][{1}/{2}] \t'
+            output = ('\nEpoch: [{0}][{1}/{2}] \t'
                       'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
                       'CE_Loss {ce_loss.val:.4f} ({ce_loss.avg:.4f})\t'
                       'SCL_Loss {scl_loss.val:.4f} ({scl_loss.avg:.4f})\t'
+                      'F1 score {f1_acc:.4f}\t'
                       'Prec@1 {top1.val:.3f} ({top1.avg:.3f})'.format(
                 epoch, i, len(train_loader), batch_time=batch_time,
-                ce_loss=ce_loss_all, scl_loss=scl_loss_all, top1=top1, ))  # TODO
+                ce_loss=ce_loss_all, scl_loss=scl_loss_all, f1_acc = f1_acc,top1=top1, ))  # TODO
             print(output)
     tf_writer.add_scalar('CE loss/train', ce_loss_all.avg, epoch)
     tf_writer.add_scalar('SCL loss/train', scl_loss_all.avg, epoch)
@@ -345,7 +350,7 @@ def validate(train_loader, val_loader, model, criterion_ce, epoch, args, tf_writ
 
     with torch.no_grad():
         end = time.time()
-        for i, data in enumerate(val_loader):
+        for i, data inenumerate tqdm((val_loader)):
             inputs, targets = data
             inputs, targets = inputs.cuda(), targets.cuda()
             batch_size = targets.size(0)
@@ -356,18 +361,20 @@ def validate(train_loader, val_loader, model, criterion_ce, epoch, args, tf_writ
             total_labels = torch.cat((total_labels, targets))
 
             acc1 = accuracy(logits, targets, topk=(1,))
+            f1_acc = f1(logits, targets)
             ce_loss_all.update(ce_loss.item(), batch_size)
             top1.update(acc1[0].item(), batch_size)
 
             batch_time.update(time.time() - end)
 
-        if i % args.print_freq == 0:
-            output = ('Test: [{0}/{1}]\t'
-                      'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
-                      'CE_Loss {ce_loss.val:.4f} ({ce_loss.avg:.4f})\t'
-                      'Prec@1 {top1.val:.3f} ({top1.avg:.3f})'.format(
-                i, len(val_loader), batch_time=batch_time, ce_loss=ce_loss_all, top1=top1, ))  # TODO
-            print(output)
+            if i % args.print_freq == 0:
+                output = ('Test: [{0}/{1}]\t'
+                        'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
+                        'CE_Loss {ce_loss.val:.4f} ({ce_loss.avg:.4f})\t'
+                        'F1 score {f1_acc:.4f}\t'
+                        'Prec@1 {top1.val:.3f} ({top1.avg:.3f})'.format(
+                    i, len(val_loader), batch_time=batch_time, ce_loss=ce_loss_all,f1_acc=f1_acc, top1=top1, ))  # TODO
+                print(output)
 
         tf_writer.add_scalar('CE loss/val', ce_loss_all.avg, epoch)
         tf_writer.add_scalar('acc/val_top1', top1.avg, epoch)
@@ -450,16 +457,22 @@ def accuracy(output, target, topk=(1,)):
         return res
 
 
-def f1_score(output, target):
+def f1(output, target):
+    """
+    It takes the output of the model and the target, and returns the F1 score
+    
+    :param output: the output of the model, which is a tensor of shape (batch_size, num_classes)
+    :param target: the ground truth labels
+    """
     with torch.no_grad():
-        maxk = max(topk)
-        batch_size = target.size(0)
-
-        _, pred = output.topk(maxk, 1, True, True)
+        _, pred = output.topk(1, 1, True, True)
         pred = pred.t()
-        correct = pred.eq(target.view(1, -1).expand_as(pred)).contiguous()
 
-    return f1_score(correct, pred, average='macro')
+    # m = MultiLabelBinarizer().fit(target.unsqueeze(0).cpu())
+    # print(m.transform(target.unsqueeze(0).cpu()))
+    # print(m.transform(pred.cpu()))
+
+    return f1_score(target.cpu(), pred.squeeze(0).cpu(), average='macro')
 
 if __name__ == '__main__':
     main()
