@@ -353,7 +353,7 @@ def validate(train_loader, val_loader, model, criterion_ce, epoch, args, tf_writ
 
     with torch.no_grad():
         end = time.time()
-        for i, data inenumerate tqdm((val_loader)):
+        for i, data in enumerate(tqdm(val_loader)):
             inputs, targets = data
             inputs, targets = inputs.cuda(), targets.cuda()
             batch_size = targets.size(0)
