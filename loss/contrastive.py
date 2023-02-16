@@ -31,7 +31,7 @@ class BalSCL(nn.Module):
             torch.arange(batch_size * 2).view(-1, 1).to(device),
             0
         )
-        mask = mask * logits_mask
+        mask = mask * logits_mask #masks out the classes that already exist in batch
         
         # class-complement
         features = torch.cat(torch.unbind(features, dim=1), dim=0)
