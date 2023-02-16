@@ -102,10 +102,8 @@ def main():
     main_worker(args.gpu, ngpus_per_node, args)
     print('total time: {:.2f}'.format((time.time() - start_time) / 60))
 
-
 def main_worker(gpu, ngpus_per_node, args):
 
-    
     args.gpu = gpu
     if args.gpu is not None:
         print("Use GPU: {} for training".format(args.gpu))
@@ -194,10 +192,6 @@ def main_worker(gpu, ngpus_per_node, args):
         val_dataset, batch_size=args.batch_size, shuffle=False,
         num_workers=args.workers, pin_memory=True)
 
-
-
-    ##########################################
-
     # create model
     print("=> creating model '{}'".format(args.arch))
     if args.arch == 'resnet50':
@@ -238,14 +232,14 @@ def main_worker(gpu, ngpus_per_node, args):
 
     cudnn.benchmark = True
 
-    
+    # Initializing loss classes
     criterion_ce = LogitAdjust(cls_num_list).cuda(args.gpu)
     criterion_scl = BalSCL(cls_num_list, args.temp).cuda(args.gpu)
 
     tf_writer = SummaryWriter(log_dir=os.path.join(args.root_log, args.store_name))
 
     best_acc1 = 0.0
-    best_many, best_med, best_few = 0.0, 0.0, 0.0
+    best_many, best_med, best_few, best_f1 = 0.0, 0.0, 0.0, 0.0
 
     if args.reload:
         txt_test = f'/nfs/users/ext_group6/data/ISIC2018_Task3_Validation_GroundTruth.txt' if args.dataset == 'isic' \
@@ -273,7 +267,7 @@ def main_worker(gpu, ngpus_per_node, args):
         train(train_loader, model, criterion_ce, criterion_scl, optimizer, epoch, args, tf_writer)
 
         # evaluate on validation set
-        acc1, many, med, few = validate(train_loader, val_loader, model, criterion_ce, epoch, args,
+        acc1, f1, many, med, few = validate(train_loader, val_loader, model, criterion_ce, epoch, args,
                                         tf_writer)
 
         # remember best acc@1 and save checkpoint
@@ -283,10 +277,13 @@ def main_worker(gpu, ngpus_per_node, args):
             best_many = many
             best_med = med
             best_few = few
-        print('Best Prec@1: {:.3f}, Many Prec@1: {:.3f}, Med Prec@1: {:.3f}, Few Prec@1: {:.3f}'.format(best_acc1,
+            best_f1 = f1
+            # print when it updates
+            print('Best Prec@1: {:.3f}, Corresponding: F1 Score: {:.3f}, Many Prec@1: {:.3f}, Med Prec@1: {:.3f}, Few Prec@1: {:.3f}'.format(best_acc1, best_f1,
                                                                                                         best_many,
                                                                                                         best_med,
-                                                                                                        best_few))
+                                                                                                         best_few))
+        # save the last checkpoint, and if best, save as best
         save_checkpoint(args, {
             'epoch': epoch + 1,
             'arch': args.arch,
@@ -297,7 +294,6 @@ def main_worker(gpu, ngpus_per_node, args):
 
         # report training time
         end_time = time.time()
-
 
 def train(train_loader, model, criterion_ce, criterion_scl, optimizer, epoch, args, tf_writer):
     batch_time = AverageMeter('Time', ':6.3f')
@@ -351,7 +347,6 @@ def train(train_loader, model, criterion_ce, criterion_scl, optimizer, epoch, ar
     tf_writer.add_scalar('SCL loss/train', scl_loss_all.avg, epoch)
     tf_writer.add_scalar('acc/train_top1', top1.avg, epoch)
 
-
 def validate(train_loader, val_loader, model, criterion_ce, epoch, args, tf_writer=None, flag='val'):
     model.eval()
     batch_time = AverageMeter('Time', ':6.3f')
@@ -396,7 +391,7 @@ def validate(train_loader, val_loader, model, criterion_ce, epoch, args, tf_writ
         probs, preds = F.softmax(total_logits.detach(), dim=1).max(dim=1)
         many_acc_top1, median_acc_top1, low_acc_top1 = shot_acc(preds, total_labels, train_loader,
                                                                 acc_per_cls=False)
-        return top1.avg, many_acc_top1, median_acc_top1, low_acc_top1
+        return top1.avg, f1.avg, many_acc_top1, median_acc_top1, low_acc_top1
 
 
 def save_checkpoint(args, state, is_best):
