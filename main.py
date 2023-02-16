@@ -341,10 +341,10 @@ def train(train_loader, model, criterion_ce, criterion_scl, optimizer, epoch, ar
                 'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
                 'CE_Loss {ce_loss.val:.4f} ({ce_loss.avg:.4f})\t'
                 'SCL_Loss {scl_loss.val:.4f} ({scl_loss.avg:.4f})\t'
-                'F1 score {f1_acc:.4f}\t'
+                'F1 score {f1.val:.4f} ({f1.avg:.4f})\t'
                 'Prec@1 {top1.val:.3f} ({top1.avg:.3f})'.format(
         epoch, i, len(train_loader), batch_time=batch_time,
-        ce_loss=ce_loss_all, scl_loss=scl_loss_all, f1_acc = f1_acc,top1=top1, ))  # TODO
+        ce_loss=ce_loss_all, scl_loss=scl_loss_all, f1 = f1,top1=top1, ))  # TODO
     print(output)
     
     tf_writer.add_scalar('CE loss/train', ce_loss_all.avg, epoch)
@@ -385,9 +385,9 @@ def validate(train_loader, val_loader, model, criterion_ce, epoch, args, tf_writ
         output = ('Test: [{0}/{1}]\t'
                 'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
                 'CE_Loss {ce_loss.val:.4f} ({ce_loss.avg:.4f})\t'
-                'F1 score {f1_acc:.4f}\t'
+                'F1 score {f1.val:.4f} ({f1.avg:.4f})\t'
                 'Prec@1 {top1.val:.3f} ({top1.avg:.3f})'.format(
-            i, len(val_loader), batch_time=batch_time, ce_loss=ce_loss_all,f1_acc=f1_acc, top1=top1, ))  # TODO
+            i, len(val_loader), batch_time=batch_time, ce_loss=ce_loss_all,f1=f1, top1=top1, ))  # TODO
         print(output)
 
         tf_writer.add_scalar('CE loss/val', ce_loss_all.avg, epoch)
@@ -486,7 +486,7 @@ def calc_f1(output, target):
     # print(m.transform(target.unsqueeze(0).cpu()))
     # print(m.transform(pred.cpu()))
 
-    return f1_score(target.cpu(), pred.squeeze(0).cpu(), average='macro')
+    return [f1_score(target.cpu(), pred.squeeze(0).cpu(), average='macro')]
 
 if __name__ == '__main__':
     main()
