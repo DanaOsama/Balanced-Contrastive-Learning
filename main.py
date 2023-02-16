@@ -304,6 +304,7 @@ def train(train_loader, model, criterion_ce, criterion_scl, optimizer, epoch, ar
     ce_loss_all = AverageMeter('CE_Loss', ':.4e')
     scl_loss_all = AverageMeter('SCL_Loss', ':.4e')
     top1 = AverageMeter('Acc@1', ':6.2f')
+    f1 = AverageMeter('F1', ':.4e')
 
     model.train()
     end = time.time()
@@ -324,8 +325,9 @@ def train(train_loader, model, criterion_ce, criterion_scl, optimizer, epoch, ar
         ce_loss_all.update(ce_loss.item(), batch_size)
         scl_loss_all.update(scl_loss.item(), batch_size)
         acc1 = accuracy(logits, targets, topk=(1,))
-        f1_acc = f1(logits, targets)
+        f1_acc = calc_f1(logits, targets)
         top1.update(acc1[0].item(), batch_size)
+        f1.update(f1_acc[0].item(), batch_size)
 
         optimizer.zero_grad()
         loss.backward()
@@ -355,6 +357,7 @@ def validate(train_loader, val_loader, model, criterion_ce, epoch, args, tf_writ
     batch_time = AverageMeter('Time', ':6.3f')
     ce_loss_all = AverageMeter('CE_Loss', ':.4e')
     top1 = AverageMeter('Acc@1', ':6.2f')
+    f1 = AverageMeter('F1', ':.4e')
     total_logits = torch.empty((0, args.cls_num)).cuda()
     total_labels = torch.empty(0, dtype=torch.long).cuda()
 
@@ -371,9 +374,10 @@ def validate(train_loader, val_loader, model, criterion_ce, epoch, args, tf_writ
             total_labels = torch.cat((total_labels, targets))
 
             acc1 = accuracy(logits, targets, topk=(1,))
-            f1_acc = f1(logits, targets)
+            f1_acc = calc_f1(logits, targets)
             ce_loss_all.update(ce_loss.item(), batch_size)
             top1.update(acc1[0].item(), batch_size)
+            f1.update(f1_acc[0].item(), batch_size)
 
             batch_time.update(time.time() - end)
 
@@ -467,7 +471,7 @@ def accuracy(output, target, topk=(1,)):
         return res
 
 
-def f1(output, target):
+def calc_f1(output, target):
     """
     It takes the output of the model and the target, and returns the F1 score
     
