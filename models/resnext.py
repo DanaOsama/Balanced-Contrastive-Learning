@@ -282,6 +282,28 @@ model_dict = {
     'resnext50': [resnext50, 2048]
 }
 
+class PrototypeRecalibrator():
+    def __init__(self, beta, initial_wc, num_classes):
+        self.beta = beta # smoothing coefficient
+        self.wc = [initial_wc for _ in range(num_classes)]
+        self.num_classes = num_classes
+    
+    def update(self, prototypes, features):
+        # update based on a batch of data
+        # use an exponential moving average
+        for i in range(self.num_classes):
+            N = (1 / len(features[i]) )
+            exp = (1 + torch.exp( -1 * np.dot(features[i].T, prototypes[i])))
+            wc_batch = N * torch.sum( 1 / exp)
+            self.wc[i] = self.beta * self.wc[i] + (1 - self.beta) * wc_batch
+    
+    def recalibrate(self, prototypes):
+        # recalibrate prototypes
+        for i in range(self.num_classes):
+            prototypes[i] = prototypes[i] + no.log(self.wc[i])
+        return prototypes
+
+
 class BCLModel(nn.Module):
     def __init__(self, num_classes=1000, name='resnet50', head='mlp', use_norm=True, feat_dim=1024):
         super(BCLModel, self).__init__()
@@ -305,5 +327,7 @@ class BCLModel(nn.Module):
         feat = self.encoder(x)
         feat_mlp = F.normalize(self.head(feat), dim=1)
         logits = self.fc(feat)
-        centers_logits = F.normalize(self.head_fc(self.fc.weight.T), dim=1)
+        centers_logits = F.normalize(self.head_fc(self.fc.weight.T), dim=1) # prototypes
+        # TODO: recalibrate logits
+
         return feat_mlp, logits, centers_logits
