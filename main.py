@@ -83,10 +83,15 @@ def main():
     # print(vars(args))
 
     wandb.login()
+
+    args.store_name = '_'.join(
+        [args.dataset, args.arch, 'batchsize', str(args.batch_size), 'epochs', str(args.epochs), 'temp', str(args.temp),
+         'lr', str(args.lr), args.cl_views, 'alpha', str(args.alpha), 'beta', str(args.beta), 'schedule', str(args.schedule), user_name])
+    print('storing name: {}'.format(args.store_name))
+
     wandb.init(
     # set the wandb project where this run will be logged
     project=args.dataset,
-
     # track hyperparameters and run metadata
     config={
     "architecture": args.arch,
@@ -112,14 +117,9 @@ def main():
     "warmup_epochs": args.warmup_epochs,
     "gpu": args.gpu},
     entity='bcl',
-    name='BCL_{}_{}_{}'.format(args.arch, datetime.now().strftime("%m%d-%H%M"), user_name)
+    name=args.store_name
     )
     print("Wandb initialized")
-
-    args.store_name = '_'.join(
-        [args.dataset, args.arch, 'batchsize', str(args.batch_size), 'epochs', str(args.epochs), 'temp', str(args.temp),
-         'lr', str(args.lr), args.cl_views, 'alpha', str(args.alpha), 'beta', str(args.beta), 'schedule', str(args.schedule)])
-    print('storing name: {}'.format(args.store_name))
 
     if args.seed is not None:
         random.seed(args.seed)
@@ -324,7 +324,7 @@ def main_worker(gpu, ngpus_per_node, args):
             print('Best Prec@1: {:.3f}, Corresponding: F1 Score: {:.3f}, Many Prec@1: {:.3f}, Med Prec@1: {:.3f}, Few Prec@1: {:.3f}'.format(best_acc1, best_f1,
                                                                                                         best_many,
                                                                                                         best_med,
-                                                                                                         best_few))
+                                                                                                        best_few))
         # save the last checkpoint, and if best, save as best
         save_checkpoint(args, {
             'epoch': epoch + 1,
@@ -384,9 +384,9 @@ def train(train_loader, model, criterion_ce, criterion_scl, optimizer, epoch, ar
                 'F1 score {f1.val:.4f} ({f1.avg:.4f})\t'
                 'Prec@1 {top1.val:.3f} ({top1.avg:.3f})'.format(
         epoch, i, len(train_loader), batch_time=batch_time,
-        ce_loss=ce_loss_all, scl_loss=scl_loss_all, f1 = f1,top1=top1, ))  # TODO
+        ce_loss = ce_loss_all, scl_loss = scl_loss_all, f1 = f1,top1=top1, ))  # TODO
 
-    wandb.log({"ce_loss_train_avg":ce_loss_all.avg, "scl_loss_train_avg":scl_loss_all.avg,"top1_train_avg":top1.avg}, step=epoch) # TODO Log f1
+    wandb.log({"ce_loss_train_avg": ce_loss_all.avg, "scl_loss_train_avg": scl_loss_all.avg, "top1_train_avg": top1.avg, "f1_train_avg": f1.avg}, step=epoch)
     print(output)
     
     tf_writer.add_scalar('CE loss/train', ce_loss_all.avg, epoch)
@@ -428,9 +428,9 @@ def validate(train_loader, val_loader, model, criterion_ce, epoch, args, tf_writ
                 'CE_Loss {ce_loss.val:.4f} ({ce_loss.avg:.4f})\t'
                 'F1 score {f1.val:.4f} ({f1.avg:.4f})\t'
                 'Prec@1 {top1.val:.3f} ({top1.avg:.3f})'.format(
-            i, len(val_loader), batch_time=batch_time, ce_loss=ce_loss_all,f1=f1, top1=top1, ))  # TODO
+            i, len(val_loader), batch_time=batch_time, ce_loss=ce_loss_all,f1=f1, top1=top1, )) 
         
-        wandb.log({"ce_loss_val_avg":ce_loss_all.avg, "top1_val_avg":top1.avg}, step=epoch) # TODO Log f1
+        wandb.log({"ce_loss_val_avg": ce_loss_all.avg, "top1_val_avg": top1.avg, "f1_val_avg": f1.avg}, step=epoch) 
 
         print(output)
 
@@ -525,10 +525,6 @@ def calc_f1(output, target):
     with torch.no_grad():
         _, pred = output.topk(1, 1, True, True)
         pred = pred.t()
-
-    # m = MultiLabelBinarizer().fit(target.unsqueeze(0).cpu())
-    # print(m.transform(target.unsqueeze(0).cpu()))
-    # print(m.transform(pred.cpu()))
 
     return [f1_score(target.cpu(), pred.squeeze(0).cpu(), average='macro')]
 
