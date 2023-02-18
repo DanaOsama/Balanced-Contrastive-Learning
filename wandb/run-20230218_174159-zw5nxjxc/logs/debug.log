@@ -1,0 +1,26 @@
+2023-02-18 17:41:59,625 INFO    MainThread:77295 [wandb_setup.py:_flush():68] Configure stats pid to 77295
+2023-02-18 17:41:59,625 INFO    MainThread:77295 [wandb_setup.py:_flush():68] Loading settings from /nfs/users/ext_group6/.config/wandb/settings
+2023-02-18 17:41:59,625 INFO    MainThread:77295 [wandb_setup.py:_flush():68] Loading settings from /nfs/users/ext_group6/Dana_Project/Balanced-Contrastive-Learning/wandb/settings
+2023-02-18 17:41:59,625 INFO    MainThread:77295 [wandb_setup.py:_flush():68] Loading settings from environment variables: {'_require_service': 'True'}
+2023-02-18 17:41:59,625 INFO    MainThread:77295 [wandb_setup.py:_flush():68] Inferring run settings from compute environment: {'program_relpath': 'main.py', 'program': '/nfs/users/ext_group6/Dana_Project/Balanced-Contrastive-Learning/main.py'}
+2023-02-18 17:41:59,625 INFO    MainThread:77295 [wandb_init.py:_log_setup():492] Logging user logs to /nfs/users/ext_group6/Dana_Project/Balanced-Contrastive-Learning/wandb/run-20230218_174159-zw5nxjxc/logs/debug.log
+2023-02-18 17:41:59,626 INFO    MainThread:77295 [wandb_init.py:_log_setup():493] Logging internal logs to /nfs/users/ext_group6/Dana_Project/Balanced-Contrastive-Learning/wandb/run-20230218_174159-zw5nxjxc/logs/debug-internal.log
+2023-02-18 17:41:59,626 INFO    MainThread:77295 [wandb_init.py:init():532] calling init triggers
+2023-02-18 17:41:59,626 INFO    MainThread:77295 [wandb_init.py:init():538] wandb.init called with sweep_config: {}
+config: {'architecture': 'resnet50', 'workers': 16, 'batch_size': 64, 'start_epoch': 0, 'epochs': 90, 'learning_rate': 0.1, 'momentum': 0.9, 'schedule': [860, 880], 'weight_decay': 0.0005, 'temp': 0.07, 'alpha': 1.0, 'beta': 0.35, 'cl_views': 'sim-sim', 'seed': None, 'randaug': True, 'randaug_m': 10, 'randaug_n': 2, 'cos': True, 'use_norm': True, 'feat_dim': 1024, 'warmup_epochs': 0, 'gpu': None}
+2023-02-18 17:41:59,626 INFO    MainThread:77295 [wandb_init.py:init():588] starting backend
+2023-02-18 17:41:59,626 INFO    MainThread:77295 [wandb_init.py:init():592] setting up manager
+2023-02-18 17:41:59,637 INFO    MainThread:77295 [backend.py:_multiprocessing_setup():106] multiprocessing start_methods=fork,spawn,forkserver, using: spawn
+2023-02-18 17:41:59,679 INFO    MainThread:77295 [wandb_init.py:init():599] backend started and connected
+2023-02-18 17:41:59,692 INFO    MainThread:77295 [wandb_init.py:init():687] updated telemetry
+2023-02-18 17:41:59,848 INFO    MainThread:77295 [wandb_init.py:init():727] communicating run to backend with 60.0 second timeout
+2023-02-18 17:42:00,592 INFO    MainThread:77295 [wandb_run.py:_on_init():2134] communicating current version
+2023-02-18 17:42:00,737 INFO    MainThread:77295 [wandb_run.py:_on_init():2143] got version response 
+2023-02-18 17:42:00,737 INFO    MainThread:77295 [wandb_init.py:init():775] starting run threads in backend
+2023-02-18 17:42:20,210 INFO    MainThread:77295 [wandb_run.py:_console_start():2114] atexit reg
+2023-02-18 17:42:20,211 INFO    MainThread:77295 [wandb_run.py:_redirect():1969] redirect: SettingsConsole.WRAP_RAW
+2023-02-18 17:42:20,211 INFO    MainThread:77295 [wandb_run.py:_redirect():2034] Wrapping output streams.
+2023-02-18 17:42:20,211 INFO    MainThread:77295 [wandb_run.py:_redirect():2059] Redirects installed.
+2023-02-18 17:42:20,212 INFO    MainThread:77295 [wandb_init.py:init():817] run started, returning control to user process
+2023-02-18 17:42:27,562 INFO    MainThread:77295 [wandb_watch.py:watch():51] Watching
+2023-02-18 17:44:33,746 WARNING MsgRouterThr:77295 [router.py:message_loop():77] message_loop has been closed
