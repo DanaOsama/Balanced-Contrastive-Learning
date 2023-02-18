@@ -1,0 +1,187 @@
+2023-02-18 17:15:27,733 INFO    StreamThr :59754 [internal.py:wandb_internal():87] W&B internal server running at pid: 59754, started at: 2023-02-18 17:15:27.719213
+2023-02-18 17:15:27,734 DEBUG   HandlerThread:59754 [handler.py:handle_request():144] handle_request: status
+2023-02-18 17:15:27,740 INFO    WriterThread:59754 [datastore.py:open_for_write():85] open: /nfs/users/ext_group6/Dana_Project/Balanced-Contrastive-Learning/wandb/run-20230218_171527-xhumotww/run-xhumotww.wandb
+2023-02-18 17:15:27,783 DEBUG   SenderThread:59754 [sender.py:send():336] send: header
+2023-02-18 17:15:27,971 DEBUG   SenderThread:59754 [sender.py:send():336] send: run
+2023-02-18 17:15:28,705 DEBUG   HandlerThread:59754 [handler.py:handle_request():144] handle_request: check_version
+2023-02-18 17:15:28,740 INFO    SenderThread:59754 [dir_watcher.py:__init__():216] watching files in: /nfs/users/ext_group6/Dana_Project/Balanced-Contrastive-Learning/wandb/run-20230218_171527-xhumotww/files
+2023-02-18 17:15:28,740 INFO    SenderThread:59754 [sender.py:_start_run_threads():1067] run started: xhumotww with start time 1676726127.731889
+2023-02-18 17:15:28,740 DEBUG   SenderThread:59754 [sender.py:send_request():363] send_request: summary_record
+2023-02-18 17:15:28,747 INFO    SenderThread:59754 [sender.py:_save_file():1321] saving file wandb-summary.json with policy end
+2023-02-18 17:15:28,747 DEBUG   SenderThread:59754 [sender.py:send_request():363] send_request: check_version
+2023-02-18 17:15:29,051 DEBUG   HandlerThread:59754 [handler.py:handle_request():144] handle_request: run_start
+2023-02-18 17:15:29,071 DEBUG   HandlerThread:59754 [system_info.py:__init__():31] System info init
+2023-02-18 17:15:29,071 DEBUG   HandlerThread:59754 [system_info.py:__init__():46] System info init done
+2023-02-18 17:15:29,071 INFO    HandlerThread:59754 [system_monitor.py:start():151] Starting system monitor
+2023-02-18 17:15:29,072 INFO    SystemMonitor:59754 [system_monitor.py:_start():116] Starting system asset monitoring threads
+2023-02-18 17:15:29,072 INFO    HandlerThread:59754 [system_monitor.py:probe():172] Collecting system info
+2023-02-18 17:15:29,072 INFO    SystemMonitor:59754 [interfaces.py:start():168] Started cpu
+2023-02-18 17:15:29,073 INFO    SystemMonitor:59754 [interfaces.py:start():168] Started disk
+2023-02-18 17:15:29,073 INFO    SystemMonitor:59754 [interfaces.py:start():168] Started gpu
+2023-02-18 17:15:29,074 INFO    SystemMonitor:59754 [interfaces.py:start():168] Started memory
+2023-02-18 17:15:29,074 INFO    SystemMonitor:59754 [interfaces.py:start():168] Started network
+2023-02-18 17:15:29,156 DEBUG   HandlerThread:59754 [system_info.py:probe():195] Probing system
+2023-02-18 17:15:29,163 DEBUG   HandlerThread:59754 [system_info.py:_probe_git():180] Probing git
+2023-02-18 17:15:29,182 DEBUG   HandlerThread:59754 [system_info.py:_probe_git():188] Probing git done
+2023-02-18 17:15:29,182 DEBUG   HandlerThread:59754 [system_info.py:probe():241] Probing system done
+2023-02-18 17:15:29,182 DEBUG   HandlerThread:59754 [system_monitor.py:probe():181] {'os': 'Linux-4.15.0-142-generic-x86_64-with-glibc2.27', 'python': '3.10.9', 'heartbeatAt': '2023-02-18T13:15:29.156739', 'startedAt': '2023-02-18T13:15:27.389223', 'docker': None, 'cuda': '11.0.228', 'args': ('--lr', '0.1', '-p', '200', '--epochs', '90', '--arch', 'resnet50', '--use_norm', 'True', '--wd', '5e-4', '--cos', 'True', '--cl_views', 'sim-sim', '--workers', '16', '--batch-size', '64'), 'state': 'running', 'program': '/nfs/users/ext_group6/Dana_Project/Balanced-Contrastive-Learning/main.py', 'codePath': 'main.py', 'git': {'remote': 'https://github.com/DanaOsama/Balanced-Contrastive-Learning', 'commit': '561d75e89b8ddf8c2013c8f442cd4521e388be15'}, 'email': 'm.mai.egy@gmail.com', 'root': '/nfs/users/ext_group6/Dana_Project/Balanced-Contrastive-Learning', 'host': 'p3-r56-b.g42cloud.net', 'username': 'ext_group6', 'executable': '/nfs/users/ext_group6/miniconda3/envs/BCL/bin/python', 'cpu_count': 48, 'cpu_count_logical': 96, 'cpu_freq': {'current': 1208.902395833333, 'min': 1200.0, 'max': 3700.0}, 'cpu_freq_per_core': [{'current': 1200.832, 'min': 1200.0, 'max': 3700.0}, {'current': 1200.775, 'min': 1200.0, 'max': 3700.0}, {'current': 1201.338, 'min': 1200.0, 'max': 3700.0}, {'current': 2179.773, 'min': 1200.0, 'max': 3700.0}, {'current': 1200.687, 'min': 1200.0, 'max': 3700.0}, {'current': 1201.976, 'min': 1200.0, 'max': 3700.0}, {'current': 1201.14, 'min': 1200.0, 'max': 3700.0}, {'current': 1200.758, 'min': 1200.0, 'max': 3700.0}, {'current': 1201.371, 'min': 1200.0, 'max': 3700.0}, {'current': 1200.883, 'min': 1200.0, 'max': 3700.0}, {'current': 1200.116, 'min': 1200.0, 'max': 3700.0}, {'current': 1200.619, 'min': 1200.0, 'max': 3700.0}, {'current': 1200.444, 'min': 1200.0, 'max': 3700.0}, {'current': 1200.952, 'min': 1200.0, 'max': 3700.0}, {'current': 1200.446, 'min': 1200.0, 'max': 3700.0}, {'current': 1199.61, 'min': 1200.0, 'max': 3700.0}, {'current': 1200.683, 'min': 1200.0, 'max': 3700.0}, {'current': 1201.046, 'min': 1200.0, 'max': 3700.0}, {'current': 1200.764, 'min': 1200.0, 'max': 3700.0}, {'current': 1200.944, 'min': 1200.0, 'max': 3700.0}, {'current': 1200.947, 'min': 1200.0, 'max': 3700.0}, {'current': 1200.815, 'min': 1200.0, 'max': 3700.0}, {'current': 1200.559, 'min': 1200.0, 'max': 3700.0}, {'current': 1200.979, 'min': 1200.0, 'max': 3700.0}, {'current': 1201.209, 'min': 1200.0, 'max': 3700.0}, {'current': 1200.429, 'min': 1200.0, 'max': 3700.0}, {'current': 1200.563, 'min': 1200.0, 'max': 3700.0}, {'current': 1200.241, 'min': 1200.0, 'max': 3700.0}, {'current': 1200.367, 'min': 1200.0, 'max': 3700.0}, {'current': 1200.785, 'min': 1200.0, 'max': 3700.0}, {'current': 1200.434, 'min': 1200.0, 'max': 3700.0}, {'current': 1201.002, 'min': 1200.0, 'max': 3700.0}, {'current': 3526.259, 'min': 1200.0, 'max': 3700.0}, {'current': 1201.056, 'min': 1200.0, 'max': 3700.0}, {'current': 1200.854, 'min': 1200.0, 'max': 3700.0}, {'current': 1201.029, 'min': 1200.0, 'max': 3700.0}, {'current': 1200.433, 'min': 1200.0, 'max': 3700.0}, {'current': 1200.07, 'min': 1200.0, 'max': 3700.0}, {'current': 1200.071, 'min': 1200.0, 'max': 3700.0}, {'current': 1200.82, 'min': 1200.0, 'max': 3700.0}, {'current': 1201.351, 'min': 1200.0, 'max': 3700.0}, {'current': 1200.917, 'min': 1200.0, 'max': 3700.0}, {'current': 1200.868, 'min': 1200.0, 'max': 3700.0}, {'current': 1201.302, 'min': 1200.0, 'max': 3700.0}, {'current': 1200.995, 'min': 1200.0, 'max': 3700.0}, {'current': 1200.938, 'min': 1200.0, 'max': 3700.0}, {'current': 1201.108, 'min': 1200.0, 'max': 3700.0}, {'current': 1201.212, 'min': 1200.0, 'max': 3700.0}, {'current': 1200.692, 'min': 1200.0, 'max': 3700.0}, {'current': 1200.696, 'min': 1200.0, 'max': 3700.0}, {'current': 1200.892, 'min': 1200.0, 'max': 3700.0}, {'current': 2587.994, 'min': 1200.0, 'max': 3700.0}, {'current': 1200.171, 'min': 1200.0, 'max': 3700.0}, {'current': 1200.11, 'min': 1200.0, 'max': 3700.0}, {'current': 1201.184, 'min': 1200.0, 'max': 3700.0}, {'current': 1200.636, 'min': 1200.0, 'max': 3700.0}, {'current': 1200.312, 'min': 1200.0, 'max': 3700.0}, {'current': 1201.09, 'min': 1200.0, 'max': 3700.0}, {'current': 1201.273, 'min': 1200.0, 'max': 3700.0}, {'current': 1200.49, 'min': 1200.0, 'max': 3700.0}, {'current': 1200.82, 'min': 1200.0, 'max': 3700.0}, {'current': 1200.764, 'min': 1200.0, 'max': 3700.0}, {'current': 1200.503, 'min': 1200.0, 'max': 3700.0}, {'current': 1201.07, 'min': 1200.0, 'max': 3700.0}, {'current': 1200.433, 'min': 1200.0, 'max': 3700.0}, {'current': 1200.335, 'min': 1200.0, 'max': 3700.0}, {'current': 1200.802, 'min': 1200.0, 'max': 3700.0}, {'current': 1200.187, 'min': 1200.0, 'max': 3700.0}, {'current': 1200.564, 'min': 1200.0, 'max': 3700.0}, {'current': 1200.819, 'min': 1200.0, 'max': 3700.0}, {'current': 1200.729, 'min': 1200.0, 'max': 3700.0}, {'current': 1200.788, 'min': 1200.0, 'max': 3700.0}, {'current': 1201.107, 'min': 1200.0, 'max': 3700.0}, {'current': 1200.836, 'min': 1200.0, 'max': 3700.0}, {'current': 1200.943, 'min': 1200.0, 'max': 3700.0}, {'current': 1200.238, 'min': 1200.0, 'max': 3700.0}, {'current': 1201.088, 'min': 1200.0, 'max': 3700.0}, {'current': 1200.37, 'min': 1200.0, 'max': 3700.0}, {'current': 1200.634, 'min': 1200.0, 'max': 3700.0}, {'current': 1200.953, 'min': 1200.0, 'max': 3700.0}, {'current': 3399.73, 'min': 1200.0, 'max': 3700.0}, {'current': 1200.917, 'min': 1200.0, 'max': 3700.0}, {'current': 1200.163, 'min': 1200.0, 'max': 3700.0}, {'current': 1200.381, 'min': 1200.0, 'max': 3700.0}, {'current': 1200.126, 'min': 1200.0, 'max': 3700.0}, {'current': 1200.544, 'min': 1200.0, 'max': 3700.0}, {'current': 1201.132, 'min': 1200.0, 'max': 3700.0}, {'current': 1200.829, 'min': 1200.0, 'max': 3700.0}, {'current': 1200.918, 'min': 1200.0, 'max': 3700.0}, {'current': 1200.496, 'min': 1200.0, 'max': 3700.0}, {'current': 1200.562, 'min': 1200.0, 'max': 3700.0}, {'current': 1200.237, 'min': 1200.0, 'max': 3700.0}, {'current': 1200.687, 'min': 1200.0, 'max': 3700.0}, {'current': 1200.157, 'min': 1200.0, 'max': 3700.0}, {'current': 1200.977, 'min': 1200.0, 'max': 3700.0}, {'current': 1201.334, 'min': 1200.0, 'max': 3700.0}], 'disk': {'total': 878.5721054077148, 'used': 78.4733772277832}, 'gpu': 'Tesla V100-SXM3-32GB', 'gpu_count': 1, 'gpu_devices': [{'name': 'Tesla V100-SXM3-32GB', 'memory_total': 34089730048}], 'memory': {'total': 1510.0767059326172}}
+2023-02-18 17:15:29,182 INFO    HandlerThread:59754 [system_monitor.py:probe():182] Finished collecting system info
+2023-02-18 17:15:29,183 INFO    HandlerThread:59754 [system_monitor.py:probe():185] Publishing system info
+2023-02-18 17:15:29,183 DEBUG   HandlerThread:59754 [system_info.py:_save_pip():51] Saving list of pip packages installed into the current environment
+2023-02-18 17:15:29,215 DEBUG   HandlerThread:59754 [system_info.py:_save_pip():67] Saving pip packages done
+2023-02-18 17:15:29,216 DEBUG   HandlerThread:59754 [system_info.py:_save_conda():74] Saving list of conda packages installed into the current environment
+2023-02-18 17:15:29,746 INFO    Thread-13 :59754 [dir_watcher.py:_on_file_created():275] file/dir created: /nfs/users/ext_group6/Dana_Project/Balanced-Contrastive-Learning/wandb/run-20230218_171527-xhumotww/files/conda-environment.yaml
+2023-02-18 17:15:29,746 INFO    Thread-13 :59754 [dir_watcher.py:_on_file_created():275] file/dir created: /nfs/users/ext_group6/Dana_Project/Balanced-Contrastive-Learning/wandb/run-20230218_171527-xhumotww/files/wandb-summary.json
+2023-02-18 17:15:29,747 INFO    Thread-13 :59754 [dir_watcher.py:_on_file_created():275] file/dir created: /nfs/users/ext_group6/Dana_Project/Balanced-Contrastive-Learning/wandb/run-20230218_171527-xhumotww/files/requirements.txt
+2023-02-18 17:16:08,781 INFO    Thread-13 :59754 [dir_watcher.py:_on_file_modified():292] file/dir modified: /nfs/users/ext_group6/Dana_Project/Balanced-Contrastive-Learning/wandb/run-20230218_171527-xhumotww/files/conda-environment.yaml
+2023-02-18 17:16:08,827 DEBUG   HandlerThread:59754 [system_info.py:_save_conda():86] Saving conda packages done
+2023-02-18 17:16:08,836 INFO    HandlerThread:59754 [system_monitor.py:probe():187] Finished publishing system info
+2023-02-18 17:16:08,922 DEBUG   HandlerThread:59754 [handler.py:handle_request():144] handle_request: status_report
+2023-02-18 17:16:08,923 DEBUG   HandlerThread:59754 [handler.py:handle_request():144] handle_request: keepalive
+2023-02-18 17:16:08,923 DEBUG   HandlerThread:59754 [handler.py:handle_request():144] handle_request: status_report
+2023-02-18 17:16:08,923 DEBUG   HandlerThread:59754 [handler.py:handle_request():144] handle_request: keepalive
+2023-02-18 17:16:08,923 DEBUG   HandlerThread:59754 [handler.py:handle_request():144] handle_request: status_report
+2023-02-18 17:16:08,923 DEBUG   HandlerThread:59754 [handler.py:handle_request():144] handle_request: keepalive
+2023-02-18 17:16:08,923 DEBUG   HandlerThread:59754 [handler.py:handle_request():144] handle_request: status_report
+2023-02-18 17:16:08,923 DEBUG   HandlerThread:59754 [handler.py:handle_request():144] handle_request: keepalive
+2023-02-18 17:16:08,923 DEBUG   HandlerThread:59754 [handler.py:handle_request():144] handle_request: status_report
+2023-02-18 17:16:08,923 DEBUG   HandlerThread:59754 [handler.py:handle_request():144] handle_request: keepalive
+2023-02-18 17:16:08,924 DEBUG   HandlerThread:59754 [handler.py:handle_request():144] handle_request: poll_exit
+2023-02-18 17:16:08,924 DEBUG   HandlerThread:59754 [handler.py:handle_request():144] handle_request: status_report
+2023-02-18 17:16:08,924 DEBUG   HandlerThread:59754 [handler.py:handle_request():144] handle_request: keepalive
+2023-02-18 17:16:08,925 DEBUG   HandlerThread:59754 [handler.py:handle_request():144] handle_request: status_report
+2023-02-18 17:16:08,925 DEBUG   HandlerThread:59754 [handler.py:handle_request():144] handle_request: keepalive
+2023-02-18 17:16:08,925 DEBUG   HandlerThread:59754 [handler.py:handle_request():144] handle_request: status_report
+2023-02-18 17:16:08,926 DEBUG   SenderThread:59754 [sender.py:send():336] send: exit
+2023-02-18 17:16:08,926 INFO    SenderThread:59754 [sender.py:send_exit():559] handling exit code: 255
+2023-02-18 17:16:08,926 INFO    SenderThread:59754 [sender.py:send_exit():561] handling runtime: 39
+2023-02-18 17:16:08,938 INFO    SenderThread:59754 [sender.py:_save_file():1321] saving file wandb-summary.json with policy end
+2023-02-18 17:16:08,938 INFO    SenderThread:59754 [sender.py:send_exit():567] send defer
+2023-02-18 17:16:08,939 DEBUG   SenderThread:59754 [sender.py:send_request():363] send_request: poll_exit
+2023-02-18 17:16:08,939 DEBUG   HandlerThread:59754 [handler.py:handle_request():144] handle_request: defer
+2023-02-18 17:16:08,939 DEBUG   SenderThread:59754 [sender.py:send():336] send: files
+2023-02-18 17:16:08,939 INFO    HandlerThread:59754 [handler.py:handle_request_defer():170] handle defer: 0
+2023-02-18 17:16:08,940 INFO    SenderThread:59754 [sender.py:_save_file():1321] saving file wandb-metadata.json with policy now
+2023-02-18 17:16:08,940 DEBUG   SenderThread:59754 [sender.py:send_request():363] send_request: defer
+2023-02-18 17:16:08,941 INFO    SenderThread:59754 [sender.py:send_request_defer():583] handle sender defer: 0
+2023-02-18 17:16:08,941 INFO    SenderThread:59754 [sender.py:transition_state():587] send defer: 1
+2023-02-18 17:16:08,941 DEBUG   HandlerThread:59754 [handler.py:handle_request():144] handle_request: defer
+2023-02-18 17:16:08,941 INFO    HandlerThread:59754 [handler.py:handle_request_defer():170] handle defer: 1
+2023-02-18 17:16:08,942 DEBUG   SenderThread:59754 [sender.py:send_request():363] send_request: defer
+2023-02-18 17:16:08,942 INFO    SenderThread:59754 [sender.py:send_request_defer():583] handle sender defer: 1
+2023-02-18 17:16:08,942 INFO    SenderThread:59754 [sender.py:transition_state():587] send defer: 2
+2023-02-18 17:16:08,942 DEBUG   HandlerThread:59754 [handler.py:handle_request():144] handle_request: defer
+2023-02-18 17:16:08,942 INFO    HandlerThread:59754 [handler.py:handle_request_defer():170] handle defer: 2
+2023-02-18 17:16:08,942 INFO    HandlerThread:59754 [system_monitor.py:finish():161] Stopping system monitor
+2023-02-18 17:16:08,943 DEBUG   SystemMonitor:59754 [system_monitor.py:_start():130] Starting system metrics aggregation loop
+2023-02-18 17:16:08,943 DEBUG   SystemMonitor:59754 [system_monitor.py:_start():137] Finished system metrics aggregation loop
+2023-02-18 17:16:08,944 DEBUG   SystemMonitor:59754 [system_monitor.py:_start():141] Publishing last batch of metrics
+2023-02-18 17:16:08,947 INFO    HandlerThread:59754 [interfaces.py:finish():175] Joined cpu
+2023-02-18 17:16:08,947 INFO    HandlerThread:59754 [interfaces.py:finish():175] Joined disk
+2023-02-18 17:16:09,071 INFO    HandlerThread:59754 [interfaces.py:finish():175] Joined gpu
+2023-02-18 17:16:09,071 INFO    HandlerThread:59754 [interfaces.py:finish():175] Joined memory
+2023-02-18 17:16:09,071 INFO    HandlerThread:59754 [interfaces.py:finish():175] Joined network
+2023-02-18 17:16:09,072 DEBUG   SenderThread:59754 [sender.py:send_request():363] send_request: defer
+2023-02-18 17:16:09,072 INFO    SenderThread:59754 [sender.py:send_request_defer():583] handle sender defer: 2
+2023-02-18 17:16:09,072 INFO    SenderThread:59754 [sender.py:transition_state():587] send defer: 3
+2023-02-18 17:16:09,072 DEBUG   SenderThread:59754 [sender.py:send():336] send: stats
+2023-02-18 17:16:09,073 DEBUG   HandlerThread:59754 [handler.py:handle_request():144] handle_request: defer
+2023-02-18 17:16:09,073 INFO    HandlerThread:59754 [handler.py:handle_request_defer():170] handle defer: 3
+2023-02-18 17:16:09,073 DEBUG   SenderThread:59754 [sender.py:send_request():363] send_request: defer
+2023-02-18 17:16:09,073 INFO    SenderThread:59754 [sender.py:send_request_defer():583] handle sender defer: 3
+2023-02-18 17:16:09,073 INFO    SenderThread:59754 [sender.py:transition_state():587] send defer: 4
+2023-02-18 17:16:09,073 DEBUG   HandlerThread:59754 [handler.py:handle_request():144] handle_request: defer
+2023-02-18 17:16:09,074 INFO    HandlerThread:59754 [handler.py:handle_request_defer():170] handle defer: 4
+2023-02-18 17:16:09,074 DEBUG   SenderThread:59754 [sender.py:send_request():363] send_request: defer
+2023-02-18 17:16:09,074 INFO    SenderThread:59754 [sender.py:send_request_defer():583] handle sender defer: 4
+2023-02-18 17:16:09,074 INFO    SenderThread:59754 [sender.py:transition_state():587] send defer: 5
+2023-02-18 17:16:09,074 DEBUG   HandlerThread:59754 [handler.py:handle_request():144] handle_request: defer
+2023-02-18 17:16:09,074 INFO    HandlerThread:59754 [handler.py:handle_request_defer():170] handle defer: 5
+2023-02-18 17:16:09,074 DEBUG   SenderThread:59754 [sender.py:send():336] send: summary
+2023-02-18 17:16:09,085 INFO    SenderThread:59754 [sender.py:_save_file():1321] saving file wandb-summary.json with policy end
+2023-02-18 17:16:09,085 DEBUG   SenderThread:59754 [sender.py:send_request():363] send_request: defer
+2023-02-18 17:16:09,085 INFO    SenderThread:59754 [sender.py:send_request_defer():583] handle sender defer: 5
+2023-02-18 17:16:09,085 INFO    SenderThread:59754 [sender.py:transition_state():587] send defer: 6
+2023-02-18 17:16:09,085 DEBUG   HandlerThread:59754 [handler.py:handle_request():144] handle_request: defer
+2023-02-18 17:16:09,086 INFO    HandlerThread:59754 [handler.py:handle_request_defer():170] handle defer: 6
+2023-02-18 17:16:09,086 DEBUG   SenderThread:59754 [sender.py:send_request():363] send_request: defer
+2023-02-18 17:16:09,086 INFO    SenderThread:59754 [sender.py:send_request_defer():583] handle sender defer: 6
+2023-02-18 17:16:09,086 INFO    SenderThread:59754 [sender.py:transition_state():587] send defer: 7
+2023-02-18 17:16:09,086 DEBUG   HandlerThread:59754 [handler.py:handle_request():144] handle_request: status_report
+2023-02-18 17:16:09,086 DEBUG   HandlerThread:59754 [handler.py:handle_request():144] handle_request: defer
+2023-02-18 17:16:09,086 INFO    HandlerThread:59754 [handler.py:handle_request_defer():170] handle defer: 7
+2023-02-18 17:16:09,087 DEBUG   SenderThread:59754 [sender.py:send_request():363] send_request: defer
+2023-02-18 17:16:09,087 INFO    SenderThread:59754 [sender.py:send_request_defer():583] handle sender defer: 7
+2023-02-18 17:16:09,087 INFO    SenderThread:59754 [sender.py:transition_state():587] send defer: 8
+2023-02-18 17:16:09,087 DEBUG   HandlerThread:59754 [handler.py:handle_request():144] handle_request: defer
+2023-02-18 17:16:09,087 INFO    HandlerThread:59754 [handler.py:handle_request_defer():170] handle defer: 8
+2023-02-18 17:16:09,087 DEBUG   SenderThread:59754 [sender.py:send_request():363] send_request: defer
+2023-02-18 17:16:09,087 INFO    SenderThread:59754 [sender.py:send_request_defer():583] handle sender defer: 8
+2023-02-18 17:16:09,341 INFO    SenderThread:59754 [sender.py:transition_state():587] send defer: 9
+2023-02-18 17:16:09,342 DEBUG   HandlerThread:59754 [handler.py:handle_request():144] handle_request: defer
+2023-02-18 17:16:09,342 DEBUG   SenderThread:59754 [sender.py:send():336] send: artifact
+2023-02-18 17:16:09,342 INFO    HandlerThread:59754 [handler.py:handle_request_defer():170] handle defer: 9
+2023-02-18 17:16:09,784 INFO    Thread-13 :59754 [dir_watcher.py:_on_file_modified():292] file/dir modified: /nfs/users/ext_group6/Dana_Project/Balanced-Contrastive-Learning/wandb/run-20230218_171527-xhumotww/files/wandb-summary.json
+2023-02-18 17:16:09,784 INFO    Thread-13 :59754 [dir_watcher.py:_on_file_created():275] file/dir created: /nfs/users/ext_group6/Dana_Project/Balanced-Contrastive-Learning/wandb/run-20230218_171527-xhumotww/files/wandb-metadata.json
+2023-02-18 17:16:10,015 INFO    wandb-upload_0:59754 [upload_job.py:push():138] Uploaded file /tmp/tmpnxgbyiqbwandb/blymv2ld-wandb-metadata.json
+2023-02-18 17:16:11,881 INFO    wandb-upload_0:59754 [upload_job.py:push():96] Uploaded file /nfs/users/ext_group6/.local/share/wandb/artifacts/staging/tmp8ur8ard8
+2023-02-18 17:16:11,887 INFO    wandb-upload_1:59754 [upload_job.py:push():96] Uploaded file /nfs/users/ext_group6/.local/share/wandb/artifacts/staging/tmps5wdcvuh
+2023-02-18 17:16:12,004 DEBUG   HandlerThread:59754 [handler.py:handle_request():144] handle_request: keepalive
+2023-02-18 17:16:13,744 INFO    SenderThread:59754 [sender.py:send_artifact():1417] sent artifact job-https___github.com_DanaOsama_Balanced-Contrastive-Learning_main.py - {'id': 'QXJ0aWZhY3Q6MzczMTE1MzU3', 'digest': '3bb639398a09a99a74e74e5a001a4459', 'state': 'PENDING', 'aliases': [], 'artifactSequence': {'id': 'QXJ0aWZhY3RDb2xsZWN0aW9uOjUzNTM4MjMw', 'latestArtifact': None}, 'version': 'latest'}
+2023-02-18 17:16:13,745 DEBUG   SenderThread:59754 [sender.py:send_request():363] send_request: defer
+2023-02-18 17:16:13,745 INFO    SenderThread:59754 [sender.py:send_request_defer():583] handle sender defer: 9
+2023-02-18 17:16:13,745 INFO    SenderThread:59754 [dir_watcher.py:finish():362] shutting down directory watcher
+2023-02-18 17:16:13,786 INFO    SenderThread:59754 [dir_watcher.py:finish():392] scan: /nfs/users/ext_group6/Dana_Project/Balanced-Contrastive-Learning/wandb/run-20230218_171527-xhumotww/files
+2023-02-18 17:16:13,786 INFO    SenderThread:59754 [dir_watcher.py:finish():406] scan save: /nfs/users/ext_group6/Dana_Project/Balanced-Contrastive-Learning/wandb/run-20230218_171527-xhumotww/files/conda-environment.yaml conda-environment.yaml
+2023-02-18 17:16:13,787 INFO    SenderThread:59754 [dir_watcher.py:finish():406] scan save: /nfs/users/ext_group6/Dana_Project/Balanced-Contrastive-Learning/wandb/run-20230218_171527-xhumotww/files/wandb-metadata.json wandb-metadata.json
+2023-02-18 17:16:13,787 INFO    SenderThread:59754 [dir_watcher.py:finish():406] scan save: /nfs/users/ext_group6/Dana_Project/Balanced-Contrastive-Learning/wandb/run-20230218_171527-xhumotww/files/requirements.txt requirements.txt
+2023-02-18 17:16:13,791 INFO    SenderThread:59754 [dir_watcher.py:finish():406] scan save: /nfs/users/ext_group6/Dana_Project/Balanced-Contrastive-Learning/wandb/run-20230218_171527-xhumotww/files/config.yaml config.yaml
+2023-02-18 17:16:13,797 INFO    SenderThread:59754 [dir_watcher.py:finish():406] scan save: /nfs/users/ext_group6/Dana_Project/Balanced-Contrastive-Learning/wandb/run-20230218_171527-xhumotww/files/wandb-summary.json wandb-summary.json
+2023-02-18 17:16:13,802 INFO    SenderThread:59754 [sender.py:transition_state():587] send defer: 10
+2023-02-18 17:16:13,802 DEBUG   HandlerThread:59754 [handler.py:handle_request():144] handle_request: defer
+2023-02-18 17:16:13,803 INFO    HandlerThread:59754 [handler.py:handle_request_defer():170] handle defer: 10
+2023-02-18 17:16:13,808 DEBUG   SenderThread:59754 [sender.py:send_request():363] send_request: defer
+2023-02-18 17:16:13,808 INFO    SenderThread:59754 [sender.py:send_request_defer():583] handle sender defer: 10
+2023-02-18 17:16:13,808 INFO    SenderThread:59754 [file_pusher.py:finish():162] shutting down file pusher
+2023-02-18 17:16:14,540 INFO    wandb-upload_0:59754 [upload_job.py:push():138] Uploaded file /nfs/users/ext_group6/Dana_Project/Balanced-Contrastive-Learning/wandb/run-20230218_171527-xhumotww/files/conda-environment.yaml
+2023-02-18 17:16:14,760 INFO    wandb-upload_3:59754 [upload_job.py:push():138] Uploaded file /nfs/users/ext_group6/Dana_Project/Balanced-Contrastive-Learning/wandb/run-20230218_171527-xhumotww/files/wandb-summary.json
+2023-02-18 17:16:14,764 INFO    wandb-upload_1:59754 [upload_job.py:push():138] Uploaded file /nfs/users/ext_group6/Dana_Project/Balanced-Contrastive-Learning/wandb/run-20230218_171527-xhumotww/files/requirements.txt
+2023-02-18 17:16:15,408 INFO    wandb-upload_2:59754 [upload_job.py:push():138] Uploaded file /nfs/users/ext_group6/Dana_Project/Balanced-Contrastive-Learning/wandb/run-20230218_171527-xhumotww/files/config.yaml
+2023-02-18 17:16:15,608 INFO    Thread-12 (_thread_body):59754 [sender.py:transition_state():587] send defer: 11
+2023-02-18 17:16:15,609 DEBUG   HandlerThread:59754 [handler.py:handle_request():144] handle_request: defer
+2023-02-18 17:16:15,609 INFO    HandlerThread:59754 [handler.py:handle_request_defer():170] handle defer: 11
+2023-02-18 17:16:15,610 DEBUG   SenderThread:59754 [sender.py:send_request():363] send_request: defer
+2023-02-18 17:16:15,610 INFO    SenderThread:59754 [sender.py:send_request_defer():583] handle sender defer: 11
+2023-02-18 17:16:15,610 INFO    SenderThread:59754 [file_pusher.py:join():167] waiting for file pusher
+2023-02-18 17:16:15,610 INFO    SenderThread:59754 [sender.py:transition_state():587] send defer: 12
+2023-02-18 17:16:15,610 DEBUG   HandlerThread:59754 [handler.py:handle_request():144] handle_request: defer
+2023-02-18 17:16:15,610 INFO    HandlerThread:59754 [handler.py:handle_request_defer():170] handle defer: 12
+2023-02-18 17:16:15,610 DEBUG   SenderThread:59754 [sender.py:send_request():363] send_request: defer
+2023-02-18 17:16:15,610 INFO    SenderThread:59754 [sender.py:send_request_defer():583] handle sender defer: 12
+2023-02-18 17:16:15,871 INFO    SenderThread:59754 [sender.py:transition_state():587] send defer: 13
+2023-02-18 17:16:15,871 DEBUG   HandlerThread:59754 [handler.py:handle_request():144] handle_request: defer
+2023-02-18 17:16:15,871 INFO    HandlerThread:59754 [handler.py:handle_request_defer():170] handle defer: 13
+2023-02-18 17:16:15,871 DEBUG   SenderThread:59754 [sender.py:send_request():363] send_request: defer
+2023-02-18 17:16:15,872 INFO    SenderThread:59754 [sender.py:send_request_defer():583] handle sender defer: 13
+2023-02-18 17:16:15,872 INFO    SenderThread:59754 [sender.py:transition_state():587] send defer: 14
+2023-02-18 17:16:15,872 DEBUG   HandlerThread:59754 [handler.py:handle_request():144] handle_request: defer
+2023-02-18 17:16:15,872 INFO    HandlerThread:59754 [handler.py:handle_request_defer():170] handle defer: 14
+2023-02-18 17:16:15,872 DEBUG   SenderThread:59754 [sender.py:send():336] send: final
+2023-02-18 17:16:15,873 DEBUG   SenderThread:59754 [sender.py:send():336] send: footer
+2023-02-18 17:16:15,873 DEBUG   SenderThread:59754 [sender.py:send_request():363] send_request: defer
+2023-02-18 17:16:15,873 INFO    SenderThread:59754 [sender.py:send_request_defer():583] handle sender defer: 14
+2023-02-18 17:16:15,874 DEBUG   HandlerThread:59754 [handler.py:handle_request():144] handle_request: poll_exit
+2023-02-18 17:16:15,874 DEBUG   SenderThread:59754 [sender.py:send_request():363] send_request: poll_exit
+2023-02-18 17:16:15,875 DEBUG   HandlerThread:59754 [handler.py:handle_request():144] handle_request: server_info
+2023-02-18 17:16:15,875 DEBUG   SenderThread:59754 [sender.py:send_request():363] send_request: server_info
+2023-02-18 17:16:15,879 DEBUG   HandlerThread:59754 [handler.py:handle_request():144] handle_request: get_summary
+2023-02-18 17:16:15,879 DEBUG   HandlerThread:59754 [handler.py:handle_request():144] handle_request: sampled_history
+2023-02-18 17:16:16,174 INFO    MainThread:59754 [wandb_run.py:_footer_history_summary_info():3442] rendering history
+2023-02-18 17:16:16,174 INFO    MainThread:59754 [wandb_run.py:_footer_history_summary_info():3474] rendering summary
+2023-02-18 17:16:16,174 INFO    MainThread:59754 [wandb_run.py:_footer_sync_info():3398] logging synced files
+2023-02-18 17:16:16,174 DEBUG   HandlerThread:59754 [handler.py:handle_request():144] handle_request: shutdown
+2023-02-18 17:16:16,175 INFO    HandlerThread:59754 [handler.py:finish():841] shutting down handler
+2023-02-18 17:16:16,875 INFO    WriterThread:59754 [datastore.py:close():299] close: /nfs/users/ext_group6/Dana_Project/Balanced-Contrastive-Learning/wandb/run-20230218_171527-xhumotww/run-xhumotww.wandb
+2023-02-18 17:16:17,173 INFO    SenderThread:59754 [sender.py:finish():1493] shutting down sender
+2023-02-18 17:16:17,174 INFO    SenderThread:59754 [file_pusher.py:finish():162] shutting down file pusher
+2023-02-18 17:16:17,174 INFO    SenderThread:59754 [file_pusher.py:join():167] waiting for file pusher

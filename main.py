@@ -23,13 +23,15 @@ import os
 from sklearn.metrics import f1_score
 from tqdm import tqdm
 import time
+import wandb
+from datetime import datetime
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--dataset', default='isic', choices=['inat', 'isic'])
 parser.add_argument('--data', default='/nfs/users/ext_group6/data/ISIC2018_Task3_Training_Input/', metavar='DIR')
 parser.add_argument('--val_data', default='/nfs/users/ext_group6/data/ISIC2018_Task3_Validation_Input/', metavar='DIR')
 parser.add_argument('--arch', default='resnext50', choices=['resnet50', 'resnext50'])
-parser.add_argument('--workers', default=16, type=int)
+parser.add_argument('--workers', default=8, type=int)
 parser.add_argument('--epochs', default=90, type=int)
 parser.add_argument('--temp', default=0.07, type=float, help='scalar temperature for contrastive learning')
 parser.add_argument('--start_epoch', default=0, type=int, metavar='N',
@@ -76,8 +78,44 @@ parser.add_argument('--reload', default=False, type=bool, help='load supervised 
 
 
 def main():
+    user_name = "Dana"
     args = parser.parse_args()
-    print(args)
+    # print(vars(args))
+
+    wandb.login()
+    wandb.init(
+    # set the wandb project where this run will be logged
+    project=args.dataset,
+
+    # track hyperparameters and run metadata
+    config={
+    "architecture": args.arch,
+    "workers": args.workers,
+    "batch_size": args.batch_size,
+    "start_epoch": args.start_epoch,
+    "epochs": args.epochs,
+    "learning_rate": args.lr,
+    "momentum": args.momentum,
+    "schedule": args.schedule,
+    "weight_decay": args.weight_decay,
+    "temp": args.temp,
+    "alpha": args.alpha, # cross entropy loss weight
+    "beta": args.beta, # supervised contrastive loss weight
+    "cl_views": args.cl_views, # Augmentation strategy for contrastive learning views
+    "seed": args.seed,
+    "randaug": args.randaug,
+    "randaug_m": args.randaug_m,
+    "randaug_n": args.randaug_n,
+    "cos": args.cos, # lr decays by cosine scheduler.
+    "use_norm": args.use_norm,
+    "feat_dim": args.feat_dim, # feature dimension of mlp head
+    "warmup_epochs": args.warmup_epochs,
+    "gpu": args.gpu},
+    entity='bcl',
+    name='BCL_{}_{}_{}'.format(args.arch, datetime.now().strftime("%m%d-%H%M"), user_name)
+    )
+    print("Wandb initialized")
+
     args.store_name = '_'.join(
         [args.dataset, args.arch, 'batchsize', str(args.batch_size), 'epochs', str(args.epochs), 'temp', str(args.temp),
          'lr', str(args.lr), args.cl_views, 'alpha', str(args.alpha), 'beta', str(args.beta), 'schedule', str(args.schedule)])
@@ -260,6 +298,10 @@ def main_worker(gpu, ngpus_per_node, args):
                                                                                                    few))
         return
 
+    # we only watch gradients for now. To watch hyperparameters, use 'all'
+    # log_freq: log gradients and parameters every N batches
+    wandb.watch(model, log='gradients', log_freq=5)
+
     for epoch in range(args.start_epoch, args.epochs):
         adjust_lr(optimizer, epoch, args)
 
@@ -294,6 +336,8 @@ def main_worker(gpu, ngpus_per_node, args):
 
         # report training time
         end_time = time.time()
+    wandb.save("model.onnx")
+    wandb.finish(exit_code=-1)
 
 def train(train_loader, model, criterion_ce, criterion_scl, optimizer, epoch, args, tf_writer):
     batch_time = AverageMeter('Time', ':6.3f')
@@ -341,6 +385,8 @@ def train(train_loader, model, criterion_ce, criterion_scl, optimizer, epoch, ar
                 'Prec@1 {top1.val:.3f} ({top1.avg:.3f})'.format(
         epoch, i, len(train_loader), batch_time=batch_time,
         ce_loss=ce_loss_all, scl_loss=scl_loss_all, f1 = f1,top1=top1, ))  # TODO
+
+    wandb.log({"ce_loss_train_avg":ce_loss_all.avg, "scl_loss_train_avg":scl_loss_all.avg,"top1_train_avg":top1.avg}, step=epoch) # TODO Log f1
     print(output)
     
     tf_writer.add_scalar('CE loss/train', ce_loss_all.avg, epoch)
@@ -383,6 +429,9 @@ def validate(train_loader, val_loader, model, criterion_ce, epoch, args, tf_writ
                 'F1 score {f1.val:.4f} ({f1.avg:.4f})\t'
                 'Prec@1 {top1.val:.3f} ({top1.avg:.3f})'.format(
             i, len(val_loader), batch_time=batch_time, ce_loss=ce_loss_all,f1=f1, top1=top1, ))  # TODO
+        
+        wandb.log({"ce_loss_val_avg":ce_loss_all.avg, "top1_val_avg":top1.avg}, step=epoch) # TODO Log f1
+
         print(output)
 
         tf_writer.add_scalar('CE loss/val', ce_loss_all.avg, epoch)
