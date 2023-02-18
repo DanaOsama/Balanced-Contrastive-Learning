@@ -75,6 +75,7 @@ parser.add_argument('--randaug_m', default=10, type=int, help='randaug-m')
 parser.add_argument('--randaug_n', default=2, type=int, help='randaug-n')
 parser.add_argument('--seed', default=None, type=int, help='seed for initializing training')
 parser.add_argument('--reload', default=False, type=bool, help='load supervised model')
+parser.add_argument('--recalibrate', default=False, type=bool, help='recalibrate prototypes')
 
 
 def main():
@@ -86,7 +87,7 @@ def main():
 
     args.store_name = '_'.join(
         [args.dataset, args.arch, 'batchsize', str(args.batch_size), 'epochs', str(args.epochs), 'temp', str(args.temp),
-         'lr', str(args.lr), args.cl_views, 'alpha', str(args.alpha), 'beta', str(args.beta), 'schedule', str(args.schedule), user_name])
+         'lr', str(args.lr), args.cl_views, 'alpha', str(args.alpha), 'beta', str(args.beta), 'schedule', str(args.schedule), 'recalibrate', str(args.recalibrate) ,user_name])
     print('storing name: {}'.format(args.store_name))
 
     wandb.init(
@@ -234,10 +235,10 @@ def main_worker(gpu, ngpus_per_node, args):
     print("=> creating model '{}'".format(args.arch))
     if args.arch == 'resnet50':
         model = resnext.BCLModel(name='resnet50', num_classes=args.cls_num, feat_dim=args.feat_dim,
-                                 use_norm=args.use_norm)
+                                 use_norm=args.use_norm, recalibrate = args.recalibrate)
     elif args.arch == 'resnext50':
         model = resnext.BCLModel(name='resnext50', num_classes=args.cls_num, feat_dim=args.feat_dim,
-                                 use_norm=args.use_norm)
+                                 use_norm=args.use_norm, recalibrate = args.recalibrate)
     else:
         raise NotImplementedError('This model is not supported')
     print(model)

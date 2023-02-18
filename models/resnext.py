@@ -305,7 +305,7 @@ class PrototypeRecalibrator():
 
 
 class BCLModel(nn.Module):
-    def __init__(self, num_classes=1000, name='resnet50', head='mlp', use_norm=True, feat_dim=1024):
+    def __init__(self, num_classes=1000, name='resnet50', head='mlp', use_norm=True, feat_dim=1024, recalibrate = False, beta = 0.95, initial_wc = 0.01):
         super(BCLModel, self).__init__()
         model_fun, dim_in = model_dict[name]
         self.encoder = model_fun()
@@ -322,6 +322,7 @@ class BCLModel(nn.Module):
             self.fc = nn.Linear(dim_in, num_classes)
         self.head_fc = nn.Sequential(nn.Linear(dim_in, dim_in), nn.BatchNorm1d(dim_in), nn.ReLU(inplace=True),
                                    nn.Linear(dim_in, feat_dim))
+        self.recalibrator = PrototypeRecalibrator(beta=beta, initial_wc=initial_wc, num_classes=num_classes)
 
     def forward(self, x):
         feat = self.encoder(x)
@@ -329,5 +330,7 @@ class BCLModel(nn.Module):
         logits = self.fc(feat)
         centers_logits = F.normalize(self.head_fc(self.fc.weight.T), dim=1) # prototypes
         # TODO: recalibrate logits
+        self.recalibrator.update(centers_logits, feat) #update recalibrator
+        centers_logits = self.recalibrator.recalibrate(centers_logits) #recalibrate
 
         return feat_mlp, logits, centers_logits
