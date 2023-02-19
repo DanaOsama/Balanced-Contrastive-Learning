@@ -29,7 +29,7 @@ from datetime import datetime
 parser = argparse.ArgumentParser()
 parser.add_argument('--dataset', default='isic', choices=['inat', 'isic'])
 parser.add_argument('--data', default='/l/users/salwa.khatib/proco/ISIC2018_Task3_Training_Input/', metavar='DIR')
-parser.add_argument('--val_data', default='/l/users/salwa.khatib/proco/ISIC2018_Task3_Training_Input/', metavar='DIR')
+parser.add_argument('--val_data', default='/l/users/salwa.khatib/proco/ISIC2018_Task3_Validation_Input/', metavar='DIR')
 parser.add_argument('--arch', default='resnext50', choices=['resnet50', 'resnext50'])
 parser.add_argument('--workers', default=8, type=int)
 parser.add_argument('--epochs', default=90, type=int)
@@ -327,6 +327,7 @@ def main_worker(gpu, ngpus_per_node, args):
                                                                                                         best_many,
                                                                                                         best_med,
                                                                                                         best_few))
+            wandb.log({"best_val_top1": best_acc1, "corresponding_val_f1": best_f1})
         # save the last checkpoint, and if best, save as best
         save_checkpoint(args, {
             'epoch': epoch + 1,
