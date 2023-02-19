@@ -28,8 +28,8 @@ from datetime import datetime
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--dataset', default='isic', choices=['inat', 'isic'])
-parser.add_argument('--data', default='/nfs/users/ext_group6/data/ISIC2018_Task3_Training_Input/', metavar='DIR')
-parser.add_argument('--val_data', default='/nfs/users/ext_group6/data/ISIC2018_Task3_Validation_Input/', metavar='DIR')
+parser.add_argument('--data', default='/l/users/salwa.khatib/proco/ISIC2018_Task3_Training_Input/', metavar='DIR')
+parser.add_argument('--val_data', default='/l/users/salwa.khatib/proco/ISIC2018_Task3_Training_Input/', metavar='DIR')
 parser.add_argument('--arch', default='resnext50', choices=['resnet50', 'resnext50'])
 parser.add_argument('--workers', default=8, type=int)
 parser.add_argument('--epochs', default=90, type=int)
@@ -116,6 +116,7 @@ def main():
     "use_norm": args.use_norm,
     "feat_dim": args.feat_dim, # feature dimension of mlp head
     "warmup_epochs": args.warmup_epochs,
+    "recalibrate": args.recalibrate,
     "gpu": args.gpu},
     entity='bcl',
     name=args.store_name
@@ -148,9 +149,9 @@ def main_worker(gpu, ngpus_per_node, args):
         print("Use GPU: {} for training".format(args.gpu))
 
     ##########################################
-    txt_train = f'/nfs/users/ext_group6/data/ISIC2018_Task3_Training_GroundTruth.txt' if args.dataset == 'isic' \
+    txt_train = f'/l/users/salwa.khatib/proco/ISIC2018_Task3_Training_Input/ISIC2018_Task3_Training_GroundTruth.txt' if args.dataset == 'isic' \
         else f'dataset/iNaturalist18/iNaturalist18_train.txt'
-    txt_val = f'/nfs/users/ext_group6/data/ISIC2018_Task3_Validation_GroundTruth.txt' if args.dataset == 'isic' \
+    txt_val = f'/l/users/salwa.khatib/proco/ISIC2018_Task3_Validation_Input/ISIC2018_Task3_Validation_GroundTruth.txt' if args.dataset == 'isic' \
         else f'dataset/iNaturalist18/iNaturalist18_val.txt'
 
     normalize = transforms.Normalize((0.466, 0.471, 0.380), (0.195, 0.194, 0.192)) if args.dataset == 'inat' \
@@ -354,7 +355,7 @@ def train(train_loader, model, criterion_ce, criterion_scl, optimizer, epoch, ar
         inputs = torch.cat([inputs[0], inputs[1], inputs[2]], dim=0)
         inputs, targets = inputs.cuda(), targets.cuda()
         batch_size = targets.shape[0]
-        feat_mlp, logits, centers = model(inputs)
+        feat_mlp, logits, centers = model(inputs, targets = targets)
         centers = centers[:args.cls_num]
         _, f2, f3 = torch.split(feat_mlp, [batch_size, batch_size, batch_size], dim=0)
         features = torch.cat([f2.unsqueeze(1), f3.unsqueeze(1)], dim=1)

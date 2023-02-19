@@ -288,20 +288,28 @@ class PrototypeRecalibrator():
         self.wc = [initial_wc for _ in range(num_classes)]
         self.num_classes = num_classes
     
-    def update(self, prototypes, features):
+    def update(self, prototypes, features, targets):
         # update based on a batch of data
         # use an exponential moving average
+        print("targets: ",targets)
+        print(self.num_classes)
+        print(prototypes.shape)
         for i in range(self.num_classes):
-            N = (1 / len(features[i]) )
-            exp = (1 + torch.exp( -1 * np.dot(features[i].T, prototypes[i])))
+            N = (1 / len(features) )
+            print("batch size ",len(features[i]))
+            print("batch size ",len(features))
+            exp = (1 + torch.exp( -1 * torch.dot(features[i].T, prototypes[i])))
+            print(exp)
             wc_batch = N * torch.sum( 1 / exp)
+            print(wc_batch)
             self.wc[i] = self.beta * self.wc[i] + (1 - self.beta) * wc_batch
     
     def recalibrate(self, prototypes):
         # recalibrate prototypes
+        new_prototypes = prototypes.clone()
         for i in range(self.num_classes):
-            prototypes[i] = prototypes[i] + no.log(self.wc[i])
-        return prototypes
+            new_prototypes[i] = prototypes[i] + torch.log(self.wc[i])
+        return new_prototypes
 
 
 class BCLModel(nn.Module):
@@ -322,15 +330,18 @@ class BCLModel(nn.Module):
             self.fc = nn.Linear(dim_in, num_classes)
         self.head_fc = nn.Sequential(nn.Linear(dim_in, dim_in), nn.BatchNorm1d(dim_in), nn.ReLU(inplace=True),
                                    nn.Linear(dim_in, feat_dim))
-        self.recalibrator = PrototypeRecalibrator(beta=beta, initial_wc=initial_wc, num_classes=num_classes)
+        self.recalibrate = recalibrate
+        if(self.recalibrate):
+            self.recalibrator = PrototypeRecalibrator(beta=beta, initial_wc=initial_wc, num_classes=num_classes)
 
-    def forward(self, x):
+    def forward(self, x, targets=None):
         feat = self.encoder(x)
         feat_mlp = F.normalize(self.head(feat), dim=1)
         logits = self.fc(feat)
         centers_logits = F.normalize(self.head_fc(self.fc.weight.T), dim=1) # prototypes
         # TODO: recalibrate logits
-        self.recalibrator.update(centers_logits, feat) #update recalibrator
-        centers_logits = self.recalibrator.recalibrate(centers_logits) #recalibrate
-
+        if(self.recalibrate):
+            self.recalibrator.update(centers_logits, feat_mlp, targets) #update recalibrator
+            centers_logits_calibrated = self.recalibrator.recalibrate(centers_logits) #recalibrate
+            return feat_mlp, logits, centers_logits_calibrated
         return feat_mlp, logits, centers_logits
