@@ -3,6 +3,7 @@ from torch import Tensor
 import torch.nn as nn
 from typing import Type, Any, Callable, Union, List, Optional
 import torch.nn.functional as F
+import math
 
 
 class NormedLinear(nn.Module):
@@ -291,24 +292,29 @@ class PrototypeRecalibrator():
     def update(self, prototypes, features, targets):
         # update based on a batch of data
         # use an exponential moving average
-        print("targets: ",targets)
-        print(self.num_classes)
-        print(prototypes.shape)
+        # print("targets: ",targets)
+        # print(self.num_classes)
+        # print(prototypes.shape)
+        bs = int(features.shape[0] / 3)
+        f1, _, _ = torch.split(features, [bs, bs, bs], dim=0)
         for i in range(self.num_classes):
-            N = (1 / len(features) )
-            print("batch size ",len(features[i]))
-            print("batch size ",len(features))
-            exp = (1 + torch.exp( -1 * torch.dot(features[i].T, prototypes[i])))
-            print(exp)
-            wc_batch = N * torch.sum( 1 / exp)
-            print(wc_batch)
-            self.wc[i] = self.beta * self.wc[i] + (1 - self.beta) * wc_batch
+            indices = [j for j, x in enumerate(targets.tolist()) if x == i]
+            N = len(indices)
+            features_i = f1[indices]
+            if(N == 0):
+                continue
+            N = (1 / N)
+            exps = torch.zeros(features_i.shape, dtype=torch.float64)
+            for j in range(len(features_i)):
+                exps[:,j] = 1 / (1 + torch.exp(-1 * torch.dot(features_i[j].T, prototypes[i])))
+            wc_batch = N * torch.sum(exps)
+            self.wc[i] = (self.beta * self.wc[i] + (1 - self.beta) * wc_batch).item()
     
     def recalibrate(self, prototypes):
         # recalibrate prototypes
         new_prototypes = prototypes.clone()
         for i in range(self.num_classes):
-            new_prototypes[i] = prototypes[i] + torch.log(self.wc[i])
+            new_prototypes[i] = prototypes[i] + math.log(self.wc[i])
         return new_prototypes
 
 
@@ -334,13 +340,13 @@ class BCLModel(nn.Module):
         if(self.recalibrate):
             self.recalibrator = PrototypeRecalibrator(beta=beta, initial_wc=initial_wc, num_classes=num_classes)
 
-    def forward(self, x, targets=None):
+    def forward(self, x, targets=None, phase='train'):
         feat = self.encoder(x)
         feat_mlp = F.normalize(self.head(feat), dim=1)
         logits = self.fc(feat)
         centers_logits = F.normalize(self.head_fc(self.fc.weight.T), dim=1) # prototypes
         # TODO: recalibrate logits
-        if(self.recalibrate):
+        if(self.recalibrate and phase == 'train'):
             self.recalibrator.update(centers_logits, feat_mlp, targets) #update recalibrator
             centers_logits_calibrated = self.recalibrator.recalibrate(centers_logits) #recalibrate
             return feat_mlp, logits, centers_logits_calibrated
