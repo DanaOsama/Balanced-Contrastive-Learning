@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=bcl            # Job name
+#SBATCH --job-name=bcl-new            # Job name
 #SBATCH --output=slurm-logs/bcl.%A_%a.txt   # Standard output and error log
 #SBATCH --nodes=1                   # Run all processes on a single node    
 #SBATCH --ntasks=1                  # Run on a single CPU
