@@ -77,6 +77,7 @@ parser.add_argument('--seed', default=None, type=int, help='seed for initializin
 parser.add_argument('--reload', default=False, type=bool, help='load supervised model')
 parser.add_argument('--recalibrate', default=False, type=bool, help='recalibrate prototypes')
 parser.add_argument('--ce_loss', default='LC', choices=['LC', 'Focal', 'FocalLC'],help='type of cross entropy loss')
+parser.add_argument('--logit_adjust', default='train', choices=['train', 'val'],help='do logit compensation based on which set')
 
 
 def main():
@@ -119,6 +120,7 @@ def main():
     "warmup_epochs": args.warmup_epochs,
     "recalibrate": args.recalibrate,
     "ce_loss": args.ce_loss,
+    "logit_adjust": args.logit_adjust,
     "gpu": args.gpu},
     entity='bcl',
     name=args.store_name
@@ -221,7 +223,11 @@ def main_worker(gpu, ngpus_per_node, args):
         transform=transform_train
     )
 
-    cls_num_list = train_dataset.cls_num_list
+    if(args.logit_adjust == 'train'):
+        cls_num_list = train_dataset.cls_num_list
+    elif(args.logit_adjust == 'val'):
+        cls_num_list = val_dataset.cls_num_list
+    
     args.cls_num = len(cls_num_list)
 
     train_sampler = None
