@@ -11,8 +11,8 @@
 #SBATCH --qos=gpu-8                 # To enable the use of up to 8 GPUs
 
 hostname
-python main.py --lr 0.05 --epochs 1000  \
+python main.py --lr 0.05 --epochs 2000 --dataset aptos \
                 --arch resnet50 --use_norm True \
                 --wd 1e-4 --cos True --cl_views sim-sim \
                 --workers 32 --batch-size 110  \
-                --alpha 1.0 --beta 0.35 --cel_loss LC --logit_adjust val
+                --alpha 1.0 --beta 0.35 --ce_loss LC --logit_adjust 'val'

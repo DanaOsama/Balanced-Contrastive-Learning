@@ -16,9 +16,13 @@ class MyDataset(Dataset):
         self.num_classes = num_classes
         self.train = train
         self.class_balance = class_balance
+        if('aptos' in txt):
+            ext = '.png'
+        else:
+            ext = '.jpg'
         with open(txt) as f:
             for line in f:
-                self.img_path.append(os.path.join(root, line.split()[0]+".jpg"))
+                self.img_path.append(os.path.join(root, line.split()[0]+ext))
                 self.labels.append(int(line.split()[1]))
 
         # creates an empty list for each class
