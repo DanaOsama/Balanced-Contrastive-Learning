@@ -426,6 +426,7 @@ def train(train_loader, model, criterion_ce, criterion_scl, optimizer, epoch, ar
         ce_loss = ce_loss_all, scl_loss = scl_loss_all, f1 = f1,top1=top1, ))  # TODO
 
     wandb.log({"ce_loss_train_avg": ce_loss_all.avg, "scl_loss_train_avg": scl_loss_all.avg, "top1_train_avg": top1.avg, "f1_train_avg": f1.avg}, step=epoch)
+    wandb.log({"epoch": epoch})
     print(output)
     
     tf_writer.add_scalar('CE loss/train', ce_loss_all.avg, epoch)

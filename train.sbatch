@@ -12,7 +12,7 @@
 
 hostname
 python main.py --lr 0.05 --epochs 2000 --dataset aptos \
-                --arch resnet50 --use_norm True \
+                --arch resnext50 --use_norm True \
                 --wd 1e-4 --cos True --cl_views sim-sim \
                 --workers 32 --batch-size 110  \
-                --alpha 1.0 --beta 0.35 --ce_loss LC --logit_adjust 'val'
+                --alpha 1.0 --beta 0.4 --ce_loss LC --logit_adjust 'train'
