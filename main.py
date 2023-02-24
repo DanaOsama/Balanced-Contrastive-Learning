@@ -16,9 +16,11 @@ import torch.backends.cudnn as cudnn
 import random
 from randaugment import rand_augment_transform
 import torchvision
-from utils import GaussianBlur, shot_acc
+from utils import GaussianBlur, shot_acc, get_random_string
 # from torch.models.tensorboard import SummaryWriter
 import argparse
+import random
+import string
 import os
 from sklearn.metrics import f1_score
 from tqdm import tqdm
@@ -89,7 +91,7 @@ def main():
 
     args.store_name = '_'.join(
         [args.dataset, args.arch, 'batchsize', str(args.batch_size), 'epochs', str(args.epochs), 'temp', str(args.temp),
-         'lr', str(args.lr), args.cl_views, 'alpha', str(args.alpha), 'beta', str(args.beta), 'schedule', str(args.schedule), 'recalibrate', str(args.recalibrate),user_name, "ce_loss", str(args.ce_loss)])
+         'lr', str(args.lr), args.cl_views, 'alpha', str(args.alpha), 'beta', str(args.beta), 'schedule', str(args.schedule), 'recalibrate', str(args.recalibrate),user_name, "ce_loss", str(args.ce_loss), get_random_string(6)])
     print('storing name: {}'.format(args.store_name))
 
     wandb.init(
