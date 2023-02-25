@@ -7,16 +7,9 @@ ISIC_TRAIN_PATH = ISIC_DATA_PATH + "SIC2018_Task3_Training_Input"
 ISIC_VAL_PATH = ISIC_DATA_PATH + "SIC2018_Task3_Validation_Input"
 
 import glob
-import SimpleITK as sitk
 from PIL import Image
-import numpy as np
 import torch
 import torchvision.transforms as transforms
-
-png_reader = sitk.ImageFileReader()
-png_reader.SetImageIO("PNGImageIO")
-jpg_reader = sitk.ImageFileReader()
-jpg_reader.SetImageIO("JPEGImageIO")
 
 # APTOS train mean and std
 mean_array_ch1 = []
@@ -39,7 +32,7 @@ for file_path in glob.glob(APTOS_TRAIN_PATH + "/*.png"):
     mean_array_ch2.append(mean_ch2)
     mean_array_ch3.append(mean_ch3)
 
-    # get std of channel 1,2,3
+    # get std of channels 1,2,3
     std_ch1, std_ch2, std_ch3 = torch.std(image_tensor, dim=[1, 2])
     std_array_ch1.append(std_ch1)
     std_array_ch2.append(std_ch2)
@@ -79,13 +72,13 @@ for file_path in glob.glob(APTOS_TEST_PATH + "/*.png"):
     transform = transforms.ToTensor()
     image_tensor = transform(image).cuda()
 
-    # get mean of channel 1,2,3
+    # get mean of channels 1,2,3
     mean_ch1, mean_ch2, mean_ch3 = torch.mean(image_tensor, dim=[1, 2])
     mean_array_ch1.append(mean_ch1)
     mean_array_ch2.append(mean_ch2)
     mean_array_ch3.append(mean_ch3)
 
-    # get std of channel 1,2,3
+    # get std of channels 1,2,3
     std_ch1, std_ch2, std_ch3 = torch.std(image_tensor, dim=[1, 2])
     std_array_ch1.append(std_ch1)
     std_array_ch2.append(std_ch2)
@@ -144,13 +137,13 @@ for file_path in glob.glob(ISIC_TRAIN_PATH + "/*.jpg"):
     transform = transforms.ToTensor()
     image_tensor = transform(image).cuda()
 
-    # get mean of channel 1,2,3
+    # get mean of channels 1,2,3
     mean_ch1, mean_ch2, mean_ch3 = torch.mean(image_tensor, dim=[1, 2])
     mean_array_ch1.append(mean_ch1)
     mean_array_ch2.append(mean_ch2)
     mean_array_ch3.append(mean_ch3)
 
-    # get std of channel 1,2,3
+    # get std of channels 1,2,3
     std_ch1, std_ch2, std_ch3 = torch.std(image_tensor, dim=[1, 2])
     std_array_ch1.append(std_ch1)
     std_array_ch2.append(std_ch2)
@@ -190,13 +183,13 @@ for file_path in glob.glob(ISIC_VAL_PATH + "/*.jpg"):
     transform = transforms.ToTensor()
     image_tensor = transform(image).cuda()
 
-    # get mean of channel 1,2,3
+    # get mean of channels 1,2,3
     mean_ch1, mean_ch2, mean_ch3 = torch.mean(image_tensor, dim=[1, 2])
     mean_array_ch1.append(mean_ch1)
     mean_array_ch2.append(mean_ch2)
     mean_array_ch3.append(mean_ch3)
 
-    # get std of channel 1,2,3
+    # get std of channels 1,2,3
     std_ch1, std_ch2, std_ch3 = torch.std(image_tensor, dim=[1, 2])
     std_array_ch1.append(std_ch1)
     std_array_ch2.append(std_ch2)
