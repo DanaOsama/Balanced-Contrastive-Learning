@@ -3,8 +3,8 @@ APTOS_TRAIN_PATH = APTOS_DATA_PATH + "train_images/"
 APTOS_TEST_PATH = APTOS_DATA_PATH + "test_images/"
 
 ISIC_DATA_PATH = "/l/users/salwa.khatib/proco/"
-ISIC_TRAIN_PATH = ISIC_DATA_PATH + "SIC2018_Task3_Training_Input"
-ISIC_VAL_PATH = ISIC_DATA_PATH + "SIC2018_Task3_Validation_Input"
+ISIC_TRAIN_PATH = ISIC_DATA_PATH + "ISIC2018_Task3_Training_Input/"
+ISIC_VAL_PATH = ISIC_DATA_PATH + "ISIC2018_Task3_Validation_Input/"
 
 import glob
 from PIL import Image
