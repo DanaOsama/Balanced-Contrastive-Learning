@@ -255,7 +255,7 @@ def _resnet(
     return model
 
 
-def resnet50(pretrained: bool = False, progress: bool = True, **kwargs: Any) -> ResNet:
+def resnet50(num_classes = None, pretrained: bool = False, progress: bool = True, **kwargs: Any) -> ResNet:
     r"""ResNet-50 model from
     `"Deep Residual Learning for Image Recognition" <https://arxiv.org/pdf/1512.03385.pdf>`_.
     Args:
@@ -266,7 +266,7 @@ def resnet50(pretrained: bool = False, progress: bool = True, **kwargs: Any) -> 
                    **kwargs)
 
 
-def resnext50(pretrained: bool = False, progress: bool = True, **kwargs: Any) -> ResNet:
+def resnext50(num_classes = None, pretrained: bool = False, progress: bool = True, **kwargs: Any) -> ResNet:
     r"""ResNeXt-50 32x4d model from
     `"Aggregated Residual Transformation for Deep Neural Networks" <https://arxiv.org/pdf/1611.05431.pdf>`_.
     Args:
@@ -277,10 +277,42 @@ def resnext50(pretrained: bool = False, progress: bool = True, **kwargs: Any) ->
     kwargs['width_per_group'] = 4
     return _resnet('resnext50_32x4d', Bottleneck, [3, 4, 6, 3], **kwargs)
 
+def crossformer(num_classes = None):
+    """
+    `CrossFormer(num_classes = num_classes, dim = (64, 128, 256, 512), depth = (2, 2, 8, 2),
+    global_window_size = (8, 4, 2, 1), local_window_size = 7)`
+    
+    The `dim` parameter is a tuple of the number of channels in each of the four stages of the
+    CrossFormer. The `depth` parameter is a tuple of the number of CrossFormer blocks in each of the
+    four stages. The `global_window_size` parameter is a tuple of the global window size in each of the
+    four stages. The `local_window_size` parameter is the local window size
+    
+    :param num_classes: number of classes to predict
+    :return: A CrossFormer model with the specified parameters.
+    """
+    from vit_pytorch.crossformer import CrossFormer
+    # override crossformer forward method to return features
+    def _forward(self, x):
+        for cel, transformer in self.layers:
+            x = cel(x)
+            x = transformer(x)
+
+        return x
+    CrossFormer.forward = _forward
+
+    model = CrossFormer(
+        num_classes = num_classes,        
+        dim = (32, 64, 128, 256), # should be comparable in size to resnet50      
+        depth = (2, 2, 8, 2),             
+        global_window_size = (8, 4, 2, 1), 
+        local_window_size = 7,           
+    )
+    return model
 
 model_dict = {
     'resnet50': [resnet50, 2048],
-    'resnext50': [resnext50, 2048]
+    'resnext50': [resnext50, 2048],
+    'crossformer': [crossformer, 2048]
 }
 
 class PrototypeRecalibrator():
@@ -322,7 +354,7 @@ class BCLModel(nn.Module):
     def __init__(self, num_classes=1000, name='resnet50', head='mlp', use_norm=True, feat_dim=1024, recalibrate = False, beta = 0.95, initial_wc = 0.01):
         super(BCLModel, self).__init__()
         model_fun, dim_in = model_dict[name]
-        self.encoder = model_fun()
+        self.encoder = model_fun(num_classes = num_classes)
         if head == 'mlp':
             self.head = nn.Sequential(nn.Linear(dim_in, dim_in), nn.BatchNorm1d(dim_in), nn.ReLU(inplace=True),
                                       nn.Linear(dim_in, feat_dim))
@@ -342,6 +374,7 @@ class BCLModel(nn.Module):
 
     def forward(self, x, targets=None, phase='train'):
         feat = self.encoder(x)
+        print(feat.shape)
         feat_mlp = F.normalize(self.head(feat), dim=1)
         logits = self.fc(feat)
         centers_logits = F.normalize(self.head_fc(self.fc.weight.T), dim=1) # prototypes

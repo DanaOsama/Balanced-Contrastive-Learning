@@ -32,9 +32,10 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--dataset', default='isic', choices=['inat', 'isic', 'aptos'])
 parser.add_argument('--data', default='/l/users/salwa.khatib/proco/ISIC2018_Task3_Training_Input/', metavar='DIR')
 parser.add_argument('--val_data', default='/l/users/salwa.khatib/proco/ISIC2018_Task3_Validation_Input/', metavar='DIR')
-parser.add_argument('--arch', default='resnext50', choices=['resnet50', 'resnext50'])
+parser.add_argument('--arch', default='resnext50', choices=['resnet50', 'resnext50', 'crossformer'])
 parser.add_argument('--workers', default=8, type=int)
 parser.add_argument('--epochs', default=90, type=int)
+parser.add_argument('--classes', default=7, type=int)
 parser.add_argument('--temp', default=0.07, type=float, help='scalar temperature for contrastive learning')
 parser.add_argument('--start_epoch', default=0, type=int, metavar='N',
                     help='manual epoch number (useful on restarts)')
@@ -75,6 +76,9 @@ parser.add_argument('--use_norm', default=True, type=bool,
                     help='cosine classifier.')
 parser.add_argument('--randaug_m', default=10, type=int, help='randaug-m')
 parser.add_argument('--randaug_n', default=2, type=int, help='randaug-n')
+parser.add_argument('--many_shot_thr', default=1000, type=int, help='many shot threshold')
+parser.add_argument('--low_shot_thr', default=200, type=int, help='low shot threshold')
+# parser.add_argument('--randaug_n', default=2, type=int, help='randaug-n')
 parser.add_argument('--seed', default=None, type=int, help='seed for initializing training')
 parser.add_argument('--reload', default=False, type=bool, help='load supervised model')
 parser.add_argument('--recalibrate', default=False, type=bool, help='recalibrate prototypes')
@@ -103,7 +107,7 @@ def main():
     "workers": args.workers,
     "batch_size": args.batch_size,
     "start_epoch": args.start_epoch,
-    "epochs": args.epochs,
+    "max_epochs": args.epochs,
     "learning_rate": args.lr,
     "momentum": args.momentum,
     "schedule": args.schedule,
@@ -123,6 +127,8 @@ def main():
     "recalibrate": args.recalibrate,
     "ce_loss": args.ce_loss,
     "logit_adjust": args.logit_adjust,
+    "many_shot_thr": args.many_shot_thr,
+    "low_shot_thr": args.low_shot_thr,
     "gpu": args.gpu},
     entity='bcl',
     name=args.store_name
@@ -226,12 +232,12 @@ def main_worker(gpu, ngpus_per_node, args):
     val_dataset = MyDataset(
         root=args.val_data,
         txt=txt_val,
-        transform=val_transform, train=False,
+        transform=val_transform, train=False, num_classes = args.classes
     )
     train_dataset = MyDataset(
         root=args.data,
         txt=txt_train,
-        transform=transform_train
+        transform=transform_train, num_classes= args.classes
     )
 
     if(args.logit_adjust == 'train'):
@@ -240,6 +246,8 @@ def main_worker(gpu, ngpus_per_node, args):
         cls_num_list = val_dataset.cls_num_list
     
     args.cls_num = len(cls_num_list)
+    print('cls_num_list', cls_num_list)
+    print('cls_num', args.cls_num)
 
     train_sampler = None
 
@@ -255,13 +263,17 @@ def main_worker(gpu, ngpus_per_node, args):
     print("=> creating model '{}'".format(args.arch))
     if args.arch == 'resnet50':
         model = resnext.BCLModel(name='resnet50', num_classes=args.cls_num, feat_dim=args.feat_dim,
-                                 use_norm=args.use_norm, recalibrate = args.recalibrate)
+                                use_norm=args.use_norm, recalibrate = args.recalibrate)
     elif args.arch == 'resnext50':
         model = resnext.BCLModel(name='resnext50', num_classes=args.cls_num, feat_dim=args.feat_dim,
-                                 use_norm=args.use_norm, recalibrate = args.recalibrate)
+                                use_norm=args.use_norm, recalibrate = args.recalibrate)
+    elif args.arch == 'crossformer':
+        model = resnext.BCLModel(name='crossformer', num_classes=args.cls_num, feat_dim=args.feat_dim,
+                                use_norm=args.use_norm, recalibrate = args.recalibrate)
     else:
         raise NotImplementedError('This model is not supported')
     print(model)
+    print('[INFO] number of parameters: ', sum(p.numel() for p in model.parameters()))
 
     if args.gpu is not None:
         torch.cuda.set_device(args.gpu)
@@ -279,6 +291,7 @@ def main_worker(gpu, ngpus_per_node, args):
             checkpoint = torch.load(args.resume, map_location='cuda:0')
             args.start_epoch = checkpoint['epoch']
             best_acc1 = checkpoint['best_acc1']
+            wandb.log({"best_val_top1": best_acc1})
             if args.gpu is not None:
                 # best_acc1 may be from a checkpoint from a different GPU
                 best_acc1 = best_acc1.to(args.gpu)
@@ -288,6 +301,7 @@ def main_worker(gpu, ngpus_per_node, args):
                   .format(args.resume, checkpoint['epoch']))
         else:
             print("=> no checkpoint found at '{}'".format(args.resume))
+            raise Exception("No checkpoint found")
 
     cudnn.benchmark = True
 
@@ -308,7 +322,8 @@ def main_worker(gpu, ngpus_per_node, args):
 
     tf_writer = SummaryWriter(log_dir=os.path.join(args.root_log, args.store_name))
 
-    best_acc1 = 0.0
+    if(not args.resume):
+        best_acc1 = 0.0
     best_many, best_med, best_few, best_f1 = 0.0, 0.0, 0.0, 0.0
 
     if args.reload:
@@ -362,6 +377,7 @@ def main_worker(gpu, ngpus_per_node, args):
                                                                                                         best_med,
                                                                                                         best_few))
             wandb.log({"best_val_top1": best_acc1,
+                        "best_epoch": epoch,
                         "corresponding_val_f1": best_f1,
                         "corresponding_many_val_top1": best_many,
                         "corresponding_med_val_top1": best_med,
@@ -480,7 +496,7 @@ def validate(train_loader, val_loader, model, criterion_ce, epoch, args, tf_writ
         tf_writer.add_scalar('acc/val_top1', top1.avg, epoch)
 
         probs, preds = F.softmax(total_logits.detach(), dim=1).max(dim=1)
-        many_acc_top1, median_acc_top1, low_acc_top1 = shot_acc(preds, total_labels, train_loader,
+        many_acc_top1, median_acc_top1, low_acc_top1 = shot_acc(preds, total_labels, train_loader, many_shot_thr=args.many_shot_thr, low_shot_thr=args.low_shot_thr,
                                                                 acc_per_cls=False)
         return top1.avg, f1.avg, many_acc_top1, median_acc_top1, low_acc_top1
 
