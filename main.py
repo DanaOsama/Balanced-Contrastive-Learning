@@ -180,18 +180,24 @@ def main_worker(gpu, ngpus_per_node, args):
 
     rgb_mean = (0.485, 0.456, 0.406)
     ra_params = dict(translate_const=int(224 * 0.45), img_mean=tuple([min(255, round(255 * x)) for x in rgb_mean]), )
-    augmentation_randncls = [
-        transforms.RandomResizedCrop(224, scale=(0.08, 1.)),
+    if(args.dataset == 'aptos'):
+        # for aptos, we dont want to use random augmentations because baaad
+        # replaced with random equalize
+        augmentation_randncls = [
+        # transforms.RandomResizedCrop(224, scale=(0.08, 1.)),
+        transforms.resize((224,224)),
         transforms.RandomHorizontalFlip(),
         transforms.RandomApply([
             transforms.ColorJitter(0.4, 0.4, 0.4, 0.0)
         ], p=1.0),
-        rand_augment_transform('rand-n{}-m{}-mstd0.5'.format(args.randaug_n, args.randaug_m), ra_params),
+        transforms.RandomEqualize(),
+        # rand_augment_transform('rand-n{}-m{}-mstd0.5'.format(args.randaug_n, args.randaug_m), ra_params),
         transforms.ToTensor(),
         normalize,
-    ]
-    augmentation_randnclsstack = [
-        transforms.RandomResizedCrop(224),
+        ]
+
+        augmentation_randnclsstack = [
+        transforms.resize((224,224)),
         transforms.RandomHorizontalFlip(),
         transforms.RandomApply([
             transforms.ColorJitter(0.4, 0.4, 0.4, 0.1)
@@ -200,9 +206,10 @@ def main_worker(gpu, ngpus_per_node, args):
         rand_augment_transform('rand-n{}-m{}-mstd0.5'.format(args.randaug_n, args.randaug_m), ra_params),
         transforms.ToTensor(),
         normalize,
-    ]
-    augmentation_sim = [
-        transforms.RandomResizedCrop(224),
+        ]
+
+        augmentation_sim = [
+        transforms.resize((224,224)),
         transforms.RandomHorizontalFlip(),
         transforms.RandomApply([
             transforms.ColorJitter(0.4, 0.4, 0.4, 0.1)  # not strengthened
@@ -210,7 +217,42 @@ def main_worker(gpu, ngpus_per_node, args):
         # transforms.RandomGrayscale(p=0.2),
         transforms.ToTensor(),
         normalize
-    ]
+        ]
+
+    else:
+        augmentation_randncls = [
+        transforms.RandomResizedCrop(224, scale=(0.08, 1.)),
+        transforms.RandomHorizontalFlip(),
+        transforms.RandomApply([
+            transforms.ColorJitter(0.4, 0.4, 0.4, 0.0)
+        ], p=1.0),
+        rand_augment_transform('rand-n{}-m{}-mstd0.5'.format(args.randaug_n, args.randaug_m), ra_params),
+        transforms.ToTensor(),
+        normalize,
+        ]
+
+        augmentation_randnclsstack = [
+            transforms.RandomResizedCrop(224),
+            transforms.RandomHorizontalFlip(),
+            transforms.RandomApply([
+                transforms.ColorJitter(0.4, 0.4, 0.4, 0.1)
+            ], p=0.8),
+            # transforms.RandomGrayscale(p=0.2),
+            rand_augment_transform('rand-n{}-m{}-mstd0.5'.format(args.randaug_n, args.randaug_m), ra_params),
+            transforms.ToTensor(),
+            normalize,
+        ]
+        augmentation_sim = [
+            transforms.RandomResizedCrop(224),
+            transforms.RandomHorizontalFlip(),
+            transforms.RandomApply([
+                transforms.ColorJitter(0.4, 0.4, 0.4, 0.1)  # not strengthened
+            ], p=0.8),
+            # transforms.RandomGrayscale(p=0.2),
+            transforms.ToTensor(),
+            normalize
+        ]
+        
     if args.cl_views == 'sim-sim':
         transform_train = [transforms.Compose(augmentation_randncls), transforms.Compose(augmentation_sim),
                            transforms.Compose(augmentation_sim), ]
