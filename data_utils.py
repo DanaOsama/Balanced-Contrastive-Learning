@@ -51,12 +51,13 @@ overall_mean_ch3 = torch.mean(mean_array_ch3)
 overall_std_ch1 = torch.mean(std_array_ch1)
 overall_std_ch2 = torch.mean(std_array_ch2)
 overall_std_ch3 = torch.mean(std_array_ch3)
-print("APTOS mean channel 1: ", overall_mean_ch1)
-print("APTOS mean channel 2: ", overall_mean_ch2)
-print("APTOS mean channel 3: ", overall_mean_ch3)
-print("APTOS std channel 1: ", overall_std_ch1)
-print("APTOS std channel 2: ", overall_std_ch2)
-print("APTOS std channel 3: ", overall_std_ch3)
+with open("mean_std.txt", "a") as f:
+    print("APTOS mean channel 1: ", overall_mean_ch1, file=f)
+    print("APTOS mean channel 2: ", overall_mean_ch2, file=f)
+    print("APTOS mean channel 3: ", overall_mean_ch3, file=f)
+    print("APTOS std channel 1: ", overall_std_ch1, file=f)
+    print("APTOS std channel 2: ", overall_std_ch2, file=f)
+    print("APTOS std channel 3: ", overall_std_ch3, file=f)
 
 # APTOS val mean and std
 mean_array_ch1 = []
@@ -97,12 +98,13 @@ overall_val_mean_ch3 = torch.mean(mean_array_ch3)
 overall_val_std_ch1 = torch.mean(std_array_ch1)
 overall_val_std_ch2 = torch.mean(std_array_ch2)
 overall_val_std_ch3 = torch.mean(std_array_ch3)
-print("APTOS val mean channel 1: ", overall_val_mean_ch1)
-print("APTOS val mean channel 2: ", overall_val_mean_ch2)
-print("APTOS val mean channel 3: ", overall_val_mean_ch3)
-print("APTOS val std channel 1: ", overall_val_std_ch1)
-print("APTOS val std channel 2: ", overall_val_std_ch2)
-print("APTOS val std channel 3: ", overall_val_std_ch3)
+with open("mean_std.txt", "a") as f:
+    print("APTOS val mean channel 1: ", overall_val_mean_ch1, file=f)
+    print("APTOS val mean channel 2: ", overall_val_mean_ch2, file=f)
+    print("APTOS val mean channel 3: ", overall_val_mean_ch3, file=f)
+    print("APTOS val std channel 1: ", overall_val_std_ch1, file=f)
+    print("APTOS val std channel 2: ", overall_val_std_ch2, file=f)
+    print("APTOS val std channel 3: ", overall_val_std_ch3, file=f)
 
 #  APTOS final mean and std
 # channel 1
@@ -115,12 +117,13 @@ std_ch2 = (overall_std_ch2 + overall_val_std_ch2) / 2
 mean_ch3 = (overall_mean_ch3 + overall_val_mean_ch3) / 2
 std_ch3 = (overall_std_ch3 + overall_val_std_ch3) / 2
 
-print("APTOS final mean channel 1: ", mean_ch1)
-print("APTOS final mean channel 2: ", mean_ch2)
-print("APTOS final mean channel 3: ", mean_ch3)
-print("APTOS final std channel 1: ", std_ch1)
-print("APTOS final std channel 2: ", std_ch2)
-print("APTOS final std channel 3: ", std_ch3)
+with open("mean_std.txt", "a") as f:
+    print("APTOS final mean channel 1: ", mean_ch1, file=f)
+    print("APTOS final mean channel 2: ", mean_ch2, file=f)
+    print("APTOS final mean channel 3: ", mean_ch3, file=f)
+    print("APTOS final std channel 1: ", std_ch1, file=f)
+    print("APTOS final std channel 2: ", std_ch2, file=f)
+    print("APTOS final std channel 3: ", std_ch3, file=f)
 
 # //////////////////////////////////////////////////////////////////////////
 # ISIC train mean and std
@@ -162,12 +165,14 @@ overall_mean_ch3 = torch.mean(mean_array_ch3)
 overall_std_ch1 = torch.mean(std_array_ch1)
 overall_std_ch2 = torch.mean(std_array_ch2)
 overall_std_ch3 = torch.mean(std_array_ch3)
-print("ISIC mean channel 1: ", overall_mean_ch1)
-print("ISIC mean channel 2: ", overall_mean_ch2)
-print("ISIC mean channel 3: ", overall_mean_ch3)
-print("ISIC std channel 1: ", overall_std_ch1)
-print("ISIC std channel 2: ", overall_std_ch2)
-print("ISIC std channel 3: ", overall_std_ch3)
+
+with open("mean_std.txt", "a") as f:
+    print("ISIC mean channel 1: ", overall_mean_ch1, file=f)
+    print("ISIC mean channel 2: ", overall_mean_ch2, file=f)
+    print("ISIC mean channel 3: ", overall_mean_ch3, file=f)
+    print("ISIC std channel 1: ", overall_std_ch1, file=f)
+    print("ISIC std channel 2: ", overall_std_ch2, file=f)
+    print("ISIC std channel 3: ", overall_std_ch3, file=f)
 
 # ISIC val mean and std
 mean_array_ch1 = []
@@ -208,12 +213,14 @@ overall_val_mean_ch3 = torch.mean(mean_array_ch3)
 overall_val_std_ch1 = torch.mean(std_array_ch1)
 overall_val_std_ch2 = torch.mean(std_array_ch2)
 overall_val_std_ch3 = torch.mean(std_array_ch3)
-print("ISIC val mean channel 1: ", overall_val_mean_ch1)
-print("ISIC val mean channel 2: ", overall_val_mean_ch2)
-print("ISIC val mean channel 3: ", overall_val_mean_ch3)
-print("ISIC val std channel 1: ", overall_val_std_ch1)
-print("ISIC val std channel 2: ", overall_val_std_ch2)
-print("ISIC val std channel 3: ", overall_val_std_ch3)
+
+with open("mean_std.txt", "a") as f:
+    print("ISIC val mean channel 1: ", overall_val_mean_ch1, file=f)
+    print("ISIC val mean channel 2: ", overall_val_mean_ch2, file=f)
+    print("ISIC val mean channel 3: ", overall_val_mean_ch3, file=f)
+    print("ISIC val std channel 1: ", overall_val_std_ch1, file=f)
+    print("ISIC val std channel 2: ", overall_val_std_ch2, file=f)
+    print("ISIC val std channel 3: ", overall_val_std_ch3, file=f)
 
 # ISIC final mean and std
 # channel 1
@@ -226,9 +233,10 @@ std_ch2 = (overall_std_ch2 + overall_val_std_ch2) / 2
 mean_ch3 = (overall_mean_ch3 + overall_val_mean_ch3) / 2
 std_ch3 = (overall_std_ch3 + overall_val_std_ch3) / 2
 
-print("ISIC final mean channel 1: ", mean_ch1)
-print("ISIC final mean channel 2: ", mean_ch2)
-print("ISIC final mean channel 3: ", mean_ch3)
-print("ISIC final std channel 1: ", std_ch1)
-print("ISIC final std channel 2: ", std_ch2)
-print("ISIC final std channel 3: ", std_ch3)
+with open("mean_std.txt", "a") as f:
+    print("ISIC final mean channel 1: ", mean_ch1, file=f)
+    print("ISIC final mean channel 2: ", mean_ch2, file=f)
+    print("ISIC final mean channel 3: ", mean_ch3, file=f)
+    print("ISIC final std channel 1: ", std_ch1, file=f)
+    print("ISIC final std channel 2: ", std_ch2, file=f)
+    print("ISIC final std channel 3: ", std_ch3, file=f)
