@@ -277,7 +277,7 @@ def resnext50(num_classes = None, pretrained: bool = False, progress: bool = Tru
     kwargs['width_per_group'] = 4
     return _resnet('resnext50_32x4d', Bottleneck, [3, 4, 6, 3], **kwargs)
 
-def crossformer(num_classes = None):
+def crossformer(num_classes = None, out_dim = 2048):
     """
     `CrossFormer(num_classes = num_classes, dim = (64, 128, 256, 512), depth = (2, 2, 8, 2),
     global_window_size = (8, 4, 2, 1), local_window_size = 7)`
@@ -290,22 +290,15 @@ def crossformer(num_classes = None):
     :param num_classes: number of classes to predict
     :return: A CrossFormer model with the specified parameters.
     """
-    from vit_pytorch.crossformer import CrossFormer
-    # override crossformer forward method to return features
-    def _forward(self, x):
-        for cel, transformer in self.layers:
-            x = cel(x)
-            x = transformer(x)
-
-        return x
-    CrossFormer.forward = _forward
+    from models.crossformer import CrossFormer
 
     model = CrossFormer(
         num_classes = num_classes,        
         dim = (32, 64, 128, 256), # should be comparable in size to resnet50      
         depth = (2, 2, 8, 2),             
         global_window_size = (8, 4, 2, 1), 
-        local_window_size = 7,           
+        local_window_size = 7, 
+        out_dim =  out_dim         
     )
     return model
 
@@ -374,7 +367,6 @@ class BCLModel(nn.Module):
 
     def forward(self, x, targets=None, phase='train'):
         feat = self.encoder(x)
-        print(feat.shape)
         feat_mlp = F.normalize(self.head(feat), dim=1)
         logits = self.fc(feat)
         centers_logits = F.normalize(self.head_fc(self.fc.weight.T), dim=1) # prototypes
