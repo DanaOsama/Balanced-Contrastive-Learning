@@ -130,7 +130,8 @@ def main():
     "many_shot_thr": args.many_shot_thr,
     "low_shot_thr": args.low_shot_thr,
     "gpu": args.gpu},
-    entity='bcl',
+    # entity='bcl',
+    entity='salwa-khatib',
     name=args.store_name
     )
     print("Wandb initialized")
@@ -181,11 +182,12 @@ def main_worker(gpu, ngpus_per_node, args):
     rgb_mean = (0.485, 0.456, 0.406)
     ra_params = dict(translate_const=int(224 * 0.45), img_mean=tuple([min(255, round(255 * x)) for x in rgb_mean]), )
     if(args.dataset == 'aptos'):
+        print("using aptos augmentations..")
         # for aptos, we dont want to use random augmentations because baaad
         # replaced with random equalize
         augmentation_randncls = [
         # transforms.RandomResizedCrop(224, scale=(0.08, 1.)),
-        transforms.resize((224,224)),
+        transforms.Resize((224,224)),
         transforms.RandomHorizontalFlip(),
         transforms.RandomApply([
             transforms.ColorJitter(0.4, 0.4, 0.4, 0.0)
@@ -197,7 +199,7 @@ def main_worker(gpu, ngpus_per_node, args):
         ]
 
         augmentation_randnclsstack = [
-        transforms.resize((224,224)),
+        transforms.Resize((224,224)),
         transforms.RandomHorizontalFlip(),
         transforms.RandomApply([
             transforms.ColorJitter(0.4, 0.4, 0.4, 0.1)
@@ -209,7 +211,7 @@ def main_worker(gpu, ngpus_per_node, args):
         ]
 
         augmentation_sim = [
-        transforms.resize((224,224)),
+        transforms.Resize((224,224)),
         transforms.RandomHorizontalFlip(),
         transforms.RandomApply([
             transforms.ColorJitter(0.4, 0.4, 0.4, 0.1)  # not strengthened
@@ -337,6 +339,7 @@ def main_worker(gpu, ngpus_per_node, args):
             if args.gpu is not None:
                 # best_acc1 may be from a checkpoint from a different GPU
                 best_acc1 = best_acc1.to(args.gpu)
+                print("best acc1 of resumed model: ", best_acc1)
             model.load_state_dict(checkpoint['state_dict'])
             optimizer.load_state_dict(checkpoint['optimizer'])
             print("=> loaded checkpoint '{}' (epoch {})"
@@ -449,6 +452,8 @@ def train(train_loader, model, criterion_ce, criterion_scl, optimizer, epoch, ar
     end = time.time()
     for i, data in enumerate(tqdm(train_loader)):
         inputs, targets = data
+        if(i<2):
+            print(inputs[0].shape)
         inputs = torch.cat([inputs[0], inputs[1], inputs[2]], dim=0)
         inputs, targets = inputs.cuda(), targets.cuda()
         batch_size = targets.shape[0]
