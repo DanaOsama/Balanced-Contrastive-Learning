@@ -253,7 +253,7 @@ def main():
             "gpu": args.gpu,
         },
         # entity='bcl',
-        entity="salwa-khatib",
+        entity="mai-cs",
         name=args.store_name,
     )
     print("Wandb initialized")
@@ -594,7 +594,7 @@ def main_worker(gpu, ngpus_per_node, args):
         adjust_lr(optimizer, epoch, args)
 
         # train for one epoch
-        train(
+        targets, features = train(
             train_loader,
             model,
             criterion_ce,
@@ -606,7 +606,7 @@ def main_worker(gpu, ngpus_per_node, args):
         )
 
         # evaluate on validation set
-        acc1, f1, many, med, few, targets, logits = validate(
+        acc1, f1, many, med, few = validate(
             train_loader, val_loader, model, criterion_ce, epoch, args, tf_writer
         )
 
@@ -619,8 +619,9 @@ def main_worker(gpu, ngpus_per_node, args):
             best_few = few
             best_f1 = f1
 
-            tsne_plot("./figures/", targets, logits)
-            
+            print("features shape:", features.shape)
+            tsne_plot("./figures/", targets, features)
+
             # print when it updates
             print(
                 "Best Prec@1: {:.3f}, Corresponding: F1 Score: {:.3f}, Many Prec@1: {:.3f}, Med Prec@1: {:.3f}, Few Prec@1: {:.3f}".format(
@@ -675,8 +676,14 @@ def train(
         inputs, targets = inputs.cuda(), targets.cuda()
         batch_size = targets.shape[0]
         feat_mlp, logits, centers = model(inputs, targets=targets, phase="train")
+
         centers = centers[: args.cls_num]
         _, f2, f3 = torch.split(feat_mlp, [batch_size, batch_size, batch_size], dim=0)
+
+        if i == 0:
+            my_targets = targets
+            my_features = f2
+
         features = torch.cat([f2.unsqueeze(1), f3.unsqueeze(1)], dim=1)
         logits, _, __ = torch.split(logits, [batch_size, batch_size, batch_size], dim=0)
         scl_loss = criterion_scl(centers, features, targets)
@@ -731,6 +738,8 @@ def train(
     tf_writer.add_scalar("CE loss/train", ce_loss_all.avg, epoch)
     tf_writer.add_scalar("SCL loss/train", scl_loss_all.avg, epoch)
     tf_writer.add_scalar("acc/train_top1", top1.avg, epoch)
+
+    return my_targets, my_features
 
 
 def validate(
@@ -810,7 +819,13 @@ def validate(
             low_shot_thr=args.low_shot_thr,
             acc_per_cls=False,
         )
-        return top1.avg, f1.avg, many_acc_top1, median_acc_top1, low_acc_top1, targets, logits
+        return (
+            top1.avg,
+            f1.avg,
+            many_acc_top1,
+            median_acc_top1,
+            low_acc_top1,
+        )
 
 
 def save_checkpoint(args, state, is_best):
@@ -908,6 +923,10 @@ def calc_f1(output, target):
 
 def tsne_plot(save_dir, targets, outputs):
     print("generating t-SNE plot...")
+    targets = targets.cpu().detach().numpy()
+    outputs = outputs.cpu().detach().numpy()
+    print(targets.shape)
+    print(outputs.shape)
     # tsne_output = bh_sne(outputs)
     tsne = TSNE(random_state=0)
     tsne_output = tsne.fit_transform(outputs)
@@ -920,19 +939,19 @@ def tsne_plot(save_dir, targets, outputs):
         x="x",
         y="y",
         hue="targets",
-        palette=sns.color_palette("hls", 10),
+        palette=sns.color_palette("dark"),
         data=df,
         marker="o",
         legend="full",
-        alpha=0.5,
+        alpha=0.9,
     )
 
     plt.xticks([])
     plt.yticks([])
-    plt.xlabel("")
-    plt.ylabel("")
+    plt.xlabel("tSNE 1")
+    plt.ylabel("tSNE 2")
 
-    plt.savefig(os.path.join(save_dir, "tsne.png"), bbox_inches="tight")
+    plt.savefig(os.path.join(save_dir, "tsne.pdf"), bbox_inches="tight")
     print("done!")
 
 
