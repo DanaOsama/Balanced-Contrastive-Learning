@@ -689,9 +689,9 @@ def train(
         centers = centers[: args.cls_num]
         _, f2, f3 = torch.split(feat_mlp, [batch_size, batch_size, batch_size], dim=0)
 
-        if i == 0:
-            my_targets = targets
-            my_features = f2
+        # if i == 0:
+        #     my_targets = targets
+        #     my_features = f2
 
         features = torch.cat([f2.unsqueeze(1), f3.unsqueeze(1)], dim=1)
         logits, _, __ = torch.split(logits, [batch_size, batch_size, batch_size], dim=0)
@@ -748,7 +748,7 @@ def train(
     tf_writer.add_scalar("SCL loss/train", scl_loss_all.avg, epoch)
     tf_writer.add_scalar("acc/train_top1", top1.avg, epoch)
 
-    return my_targets, my_features
+    return targets, f2
 
 
 def validate(
