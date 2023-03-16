@@ -935,21 +935,25 @@ def tsne_plot(save_dir, targets, outputs):
     df["targets"] = targets
 
     plt.rcParams["figure.figsize"] = 10, 10
+    handles, labels = plt.gca().get_legend_handles_labels()
+    by_label = dict(zip(labels, handles))
     sns.scatterplot(
         x="x",
         y="y",
         hue="targets",
-        palette=sns.color_palette("dark"),
+        palette=sns.color_palette("deep"),
         data=df,
         marker="o",
-        legend="full",
-        alpha=0.9,
+        alpha=0.8,
     )
+
+    # plt.scatter(tsne_output[0], tsne_output[1], c=targets, cmap="jet")
 
     plt.xticks([])
     plt.yticks([])
     plt.xlabel("tSNE 1")
     plt.ylabel("tSNE 2")
+    plt.legend(by_label.values(), by_label.keys())
 
     plt.savefig(os.path.join(save_dir, "tsne.pdf"), bbox_inches="tight")
     print("done!")
