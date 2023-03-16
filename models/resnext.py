@@ -294,7 +294,7 @@ def crossformer(num_classes = None, out_dim = 2048):
 
     model = CrossFormer(
         num_classes = num_classes,        
-        dim = (32, 64, 128, 256), # should be comparable in size to resnet50      
+        dim = (64, 128, 256, 512), # should be comparable in size to resnet50      
         depth = (2, 2, 8, 2),             
         global_window_size = (8, 4, 2, 1), 
         local_window_size = 7, 
@@ -302,10 +302,37 @@ def crossformer(num_classes = None, out_dim = 2048):
     )
     return model
 
+
+def vit_small(num_classes = None, out_dim = 2048):
+    """
+    > The function `vit_small` returns a ViT model with a patch size of 16, a depth of 6, and a hidden
+    dimension of 1024
+    
+    :param num_classes: number of classes in the dataset
+    :param out_dim: the dimension of the output of the model, defaults to 2048 (optional)
+    :return: A model
+    """
+    from vit_for_small_dataset import ViT
+
+    model = ViT(
+        image_size = 224,
+        patch_size = 16,
+        num_classes = num_classes,
+        dim = 1024,
+        depth = 6,
+        heads = 16,
+        mlp_dim = 2048,
+        dropout = 0.1,
+        emb_dropout = 0.1
+    )        
+        
+    return model
+
 model_dict = {
     'resnet50': [resnet50, 2048],
     'resnext50': [resnext50, 2048],
-    'crossformer': [crossformer, 2048]
+    'crossformer': [crossformer, 2048],
+    'vit_small': [vit_small, 2048]
 }
 
 class PrototypeRecalibrator():

@@ -32,7 +32,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--dataset', default='isic', choices=['inat', 'isic', 'aptos'])
 parser.add_argument('--data', default='/l/users/salwa.khatib/proco/ISIC2018_Task3_Training_Input/', metavar='DIR')
 parser.add_argument('--val_data', default='/l/users/salwa.khatib/proco/ISIC2018_Task3_Validation_Input/', metavar='DIR')
-parser.add_argument('--arch', default='resnext50', choices=['resnet50', 'resnext50', 'crossformer'])
+parser.add_argument('--arch', default='resnext50', choices=['resnet50', 'resnext50', 'crossformer', 'vit_small'])
 parser.add_argument('--workers', default=8, type=int)
 parser.add_argument('--epochs', default=90, type=int)
 parser.add_argument('--classes', default=7, type=int)
@@ -92,9 +92,9 @@ def main():
     # print(vars(args))
 
     wandb.login()
-
+    #, "(64, 128, 256, 512)"
     args.store_name = '_'.join(
-        [args.dataset, args.arch, 'batchsize', str(args.batch_size), 'epochs', str(args.epochs), 'temp', str(args.temp),
+        [args.dataset, args.arch,'batchsize', str(args.batch_size), 'epochs', str(args.epochs), 'temp', str(args.temp),
          'lr', str(args.lr), args.cl_views, 'alpha', str(args.alpha), 'beta', str(args.beta), 'schedule', str(args.schedule), 'recalibrate', str(args.recalibrate),user_name, "ce_loss", str(args.ce_loss), get_random_string(6)])
     print('storing name: {}'.format(args.store_name))
 
@@ -129,6 +129,7 @@ def main():
     "logit_adjust": args.logit_adjust,
     "many_shot_thr": args.many_shot_thr,
     "low_shot_thr": args.low_shot_thr,
+    "resume": args.resume,
     "gpu": args.gpu},
     # entity='bcl',
     entity='salwa-khatib',
@@ -181,25 +182,60 @@ def main_worker(gpu, ngpus_per_node, args):
 
     rgb_mean = (0.485, 0.456, 0.406)
     ra_params = dict(translate_const=int(224 * 0.45), img_mean=tuple([min(255, round(255 * x)) for x in rgb_mean]), )
-    if(args.dataset == 'aptos'):
-        print("using aptos augmentations..")
-        # for aptos, we dont want to use random augmentations because baaad
-        # replaced with random equalize
-        augmentation_randncls = [
-        # transforms.RandomResizedCrop(224, scale=(0.08, 1.)),
-        transforms.Resize((224,224)),
-        transforms.RandomHorizontalFlip(),
-        transforms.RandomApply([
-            transforms.ColorJitter(0.4, 0.4, 0.4, 0.0)
-        ], p=1.0),
-        transforms.RandomEqualize(),
-        # rand_augment_transform('rand-n{}-m{}-mstd0.5'.format(args.randaug_n, args.randaug_m), ra_params),
-        transforms.ToTensor(),
-        normalize,
-        ]
+    # if(args.dataset == 'aptos'):
+    #     print("using aptos augmentations..")
+    #     # for aptos, we dont want to use random augmentations because baaad
+    #     # replaced with random equalize
+    #     augmentation_randncls = [
+    #     # transforms.RandomResizedCrop(224, scale=(0.08, 1.)),
+    #     transforms.Resize((224,224)),
+    #     transforms.RandomHorizontalFlip(),
+    #     transforms.RandomApply([
+    #         transforms.ColorJitter(0.4, 0.4, 0.4, 0.0)
+    #     ], p=1.0),
+    #     transforms.RandomEqualize(),
+    #     # rand_augment_transform('rand-n{}-m{}-mstd0.5'.format(args.randaug_n, args.randaug_m), ra_params),
+    #     transforms.ToTensor(),
+    #     normalize,
+    #     ]
 
-        augmentation_randnclsstack = [
-        transforms.Resize((224,224)),
+    #     augmentation_randnclsstack = [
+    #     transforms.Resize((224,224)),
+    #     transforms.RandomHorizontalFlip(),
+    #     transforms.RandomApply([
+    #         transforms.ColorJitter(0.4, 0.4, 0.4, 0.1)
+    #     ], p=0.8),
+    #     # transforms.RandomGrayscale(p=0.2),
+    #     rand_augment_transform('rand-n{}-m{}-mstd0.5'.format(args.randaug_n, args.randaug_m), ra_params),
+    #     transforms.ToTensor(),
+    #     normalize,
+    #     ]
+
+    #     augmentation_sim = [
+    #     transforms.Resize((224,224)),
+    #     transforms.RandomHorizontalFlip(),
+    #     transforms.RandomApply([
+    #         transforms.ColorJitter(0.4, 0.4, 0.4, 0.1)  # not strengthened
+    #     ], p=0.8),
+    #     # transforms.RandomGrayscale(p=0.2),
+    #     transforms.ToTensor(),
+    #     normalize
+    #     ]
+
+    # else:
+    augmentation_randncls = [
+    transforms.RandomResizedCrop(224, scale=(0.08, 1.)),
+    transforms.RandomHorizontalFlip(),
+    transforms.RandomApply([
+        transforms.ColorJitter(0.4, 0.4, 0.4, 0.0)
+    ], p=1.0),
+    rand_augment_transform('rand-n{}-m{}-mstd0.5'.format(args.randaug_n, args.randaug_m), ra_params),
+    transforms.ToTensor(),
+    normalize,
+    ]
+
+    augmentation_randnclsstack = [
+        transforms.RandomResizedCrop(224),
         transforms.RandomHorizontalFlip(),
         transforms.RandomApply([
             transforms.ColorJitter(0.4, 0.4, 0.4, 0.1)
@@ -208,10 +244,9 @@ def main_worker(gpu, ngpus_per_node, args):
         rand_augment_transform('rand-n{}-m{}-mstd0.5'.format(args.randaug_n, args.randaug_m), ra_params),
         transforms.ToTensor(),
         normalize,
-        ]
-
-        augmentation_sim = [
-        transforms.Resize((224,224)),
+    ]
+    augmentation_sim = [
+        transforms.RandomResizedCrop(224),
         transforms.RandomHorizontalFlip(),
         transforms.RandomApply([
             transforms.ColorJitter(0.4, 0.4, 0.4, 0.1)  # not strengthened
@@ -219,41 +254,7 @@ def main_worker(gpu, ngpus_per_node, args):
         # transforms.RandomGrayscale(p=0.2),
         transforms.ToTensor(),
         normalize
-        ]
-
-    else:
-        augmentation_randncls = [
-        transforms.RandomResizedCrop(224, scale=(0.08, 1.)),
-        transforms.RandomHorizontalFlip(),
-        transforms.RandomApply([
-            transforms.ColorJitter(0.4, 0.4, 0.4, 0.0)
-        ], p=1.0),
-        rand_augment_transform('rand-n{}-m{}-mstd0.5'.format(args.randaug_n, args.randaug_m), ra_params),
-        transforms.ToTensor(),
-        normalize,
-        ]
-
-        augmentation_randnclsstack = [
-            transforms.RandomResizedCrop(224),
-            transforms.RandomHorizontalFlip(),
-            transforms.RandomApply([
-                transforms.ColorJitter(0.4, 0.4, 0.4, 0.1)
-            ], p=0.8),
-            # transforms.RandomGrayscale(p=0.2),
-            rand_augment_transform('rand-n{}-m{}-mstd0.5'.format(args.randaug_n, args.randaug_m), ra_params),
-            transforms.ToTensor(),
-            normalize,
-        ]
-        augmentation_sim = [
-            transforms.RandomResizedCrop(224),
-            transforms.RandomHorizontalFlip(),
-            transforms.RandomApply([
-                transforms.ColorJitter(0.4, 0.4, 0.4, 0.1)  # not strengthened
-            ], p=0.8),
-            # transforms.RandomGrayscale(p=0.2),
-            transforms.ToTensor(),
-            normalize
-        ]
+    ]
         
     if args.cl_views == 'sim-sim':
         transform_train = [transforms.Compose(augmentation_randncls), transforms.Compose(augmentation_sim),
@@ -313,6 +314,9 @@ def main_worker(gpu, ngpus_per_node, args):
                                 use_norm=args.use_norm, recalibrate = args.recalibrate)
     elif args.arch == 'crossformer':
         model = resnext.BCLModel(name='crossformer', num_classes=args.cls_num, feat_dim=args.feat_dim,
+                                use_norm=args.use_norm, recalibrate = args.recalibrate)
+    elif args.arch == 'vit_small':
+        model = resnext.BCLModel(name='vit_small', num_classes=args.cls_num, feat_dim=args.feat_dim,
                                 use_norm=args.use_norm, recalibrate = args.recalibrate)
     else:
         raise NotImplementedError('This model is not supported')
