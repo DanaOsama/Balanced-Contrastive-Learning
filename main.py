@@ -195,7 +195,9 @@ parser.add_argument(
     help="user name",
     choices=["salwa", "mai", "dana"],
 )
-
+parser.add_argument(
+    "--pretrained", default=False, type=bool, help="use pretrained model"
+)
 EXP_NAME = "supcon"
 
 
@@ -237,8 +239,8 @@ def main():
             user_name,
             "ce_loss",
             str(args.ce_loss),
-            "loss_req",
-            str(args.loss_req),
+            "pretrained",
+            str(args.pretrained),
             get_random_string(6),
         ]
     )
@@ -277,6 +279,7 @@ def main():
             "low_shot_thr": args.low_shot_thr,
             "resume": args.resume,
             "gpu": args.gpu,
+            "pretrained": args.pretrained,
         },
         # entity='bcl',
         entity=wandb_entity,
@@ -546,7 +549,6 @@ def main_worker(gpu, ngpus_per_node, args):
 
     # create model
     print("=> creating model '{}'".format(args.arch))
-
     if args.arch == "resnet50":
         model = resnext.BCLModel(
             name="resnet50",
@@ -554,6 +556,7 @@ def main_worker(gpu, ngpus_per_node, args):
             feat_dim=args.feat_dim,
             use_norm=args.use_norm,
             recalibrate=args.recalibrate,
+            pretrained=args.pretrained,
         )
     elif args.arch == "resnext50":
         model = resnext.BCLModel(
@@ -562,6 +565,7 @@ def main_worker(gpu, ngpus_per_node, args):
             feat_dim=args.feat_dim,
             use_norm=args.use_norm,
             recalibrate=args.recalibrate,
+            pretrained=args.pretrained,
         )
     elif args.arch == "crossformer":
         model = resnext.BCLModel(
@@ -570,6 +574,7 @@ def main_worker(gpu, ngpus_per_node, args):
             feat_dim=args.feat_dim,
             use_norm=args.use_norm,
             recalibrate=args.recalibrate,
+            pretrained=args.pretrained,
         )
     elif args.arch == "vit_small":
         model = resnext.BCLModel(
@@ -578,6 +583,7 @@ def main_worker(gpu, ngpus_per_node, args):
             feat_dim=args.feat_dim,
             use_norm=args.use_norm,
             recalibrate=args.recalibrate,
+            pretrained=args.pretrained,
         )
     else:
         raise NotImplementedError("This model is not supported")
@@ -682,7 +688,7 @@ def main_worker(gpu, ngpus_per_node, args):
         adjust_lr(optimizer, epoch, args)
 
         # train for one epoch
-        targets, tsne_f1, tsne_f2  = train(
+        targets, tsne_f1, tsne_f2 = train(
             train_loader,
             model,
             criterion_ce,
