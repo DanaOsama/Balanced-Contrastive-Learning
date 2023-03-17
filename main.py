@@ -36,7 +36,6 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 
 parser = argparse.ArgumentParser()
-<<<<<<< HEAD
 parser.add_argument('--dataset', default='isic', choices=['inat', 'isic', 'aptos'])
 parser.add_argument('--data', default='/l/users/salwa.khatib/proco/ISIC2018_Task3_Training_Input/', metavar='DIR')
 parser.add_argument('--val_data', default='/l/users/salwa.khatib/proco/ISIC2018_Task3_Validation_Input/', metavar='DIR')
@@ -86,134 +85,6 @@ parser.add_argument('--randaug_m', default=10, type=int, help='randaug-m')
 parser.add_argument('--randaug_n', default=2, type=int, help='randaug-n')
 parser.add_argument('--many_shot_thr', default=1000, type=int, help='many shot threshold')
 parser.add_argument('--low_shot_thr', default=200, type=int, help='low shot threshold')
-=======
-parser.add_argument("--dataset", default="isic", choices=["inat", "isic", "aptos"])
-parser.add_argument(
-    "--data",
-    default="/l/users/salwa.khatib/proco/ISIC2018_Task3_Training_Input/",
-    metavar="DIR",
-)
-parser.add_argument(
-    "--val_data",
-    default="/l/users/salwa.khatib/proco/ISIC2018_Task3_Validation_Input/",
-    metavar="DIR",
-)
-parser.add_argument(
-    "--arch", default="resnext50", choices=["resnet50", "resnext50", "crossformer"]
-)
-parser.add_argument("--workers", default=8, type=int)
-parser.add_argument("--epochs", default=90, type=int)
-parser.add_argument("--classes", default=7, type=int)
-parser.add_argument(
-    "--temp",
-    default=0.07,
-    type=float,
-    help="scalar temperature for contrastive learning",
-)
-parser.add_argument(
-    "--start_epoch",
-    default=0,
-    type=int,
-    metavar="N",
-    help="manual epoch number (useful on restarts)",
-)
-parser.add_argument(
-    "-b",
-    "--batch-size",
-    default=128,
-    type=int,
-    metavar="N",
-    help="mini-batch size (default: 256), this is the total "
-    "batch size of all GPUs on the current node when "
-    "using Data Parallel or Distributed Data Parallel",
-)
-parser.add_argument(
-    "--lr",
-    "--learning-rate",
-    default=0.1,
-    type=float,
-    metavar="LR",
-    help="initial learning rate",
-    dest="lr",
-)
-parser.add_argument(
-    "--schedule",
-    default=[860, 880],
-    nargs="*",
-    type=int,
-    help="learning rate schedule (when to drop lr by 10x)",
-)
-parser.add_argument(
-    "--momentum", default=0.9, type=float, metavar="M", help="momentum of SGD solver"
-)
-parser.add_argument(
-    "--wd",
-    "--weight-decay",
-    default=5e-4,
-    type=float,
-    metavar="W",
-    help="weight decay (default: 1e-4)",
-    dest="weight_decay",
-)
-parser.add_argument(
-    "-p",
-    "--print_freq",
-    default=3,
-    type=int,
-    metavar="N",
-    help="print frequency (default: 20)",
-)
-parser.add_argument(
-    "-e",
-    "--evaluate",
-    dest="evaluate",
-    action="store_true",
-    help="evaluate model on validation set",
-)
-parser.add_argument(
-    "--resume",
-    default="",
-    type=str,
-    metavar="PATH",
-    help="path to latest checkpoint (default: none)",
-)
-parser.add_argument("--gpu", default=None, type=int, help="GPU id to use.")
-parser.add_argument(
-    "--alpha", default=1.0, type=float, help="cross entropy loss weight"
-)
-parser.add_argument(
-    "--beta", default=0.35, type=float, help="supervised contrastive loss weight"
-)
-parser.add_argument(
-    "--randaug",
-    default=True,
-    type=bool,
-    help="use RandAugmentation for classification branch",
-)
-parser.add_argument(
-    "--cl_views",
-    default="sim-sim",
-    type=str,
-    choices=["sim-sim", "sim-rand", "rand-rand"],
-    help="Augmentation strategy for contrastive learning views",
-)
-parser.add_argument(
-    "--feat_dim", default=1024, type=int, help="feature dimension of mlp head"
-)
-parser.add_argument("--warmup_epochs", default=0, type=int, help="warmup epochs")
-parser.add_argument("--root_log", type=str, default="log")
-parser.add_argument(
-    "--cos", default=True, type=bool, help="lr decays by cosine scheduler. "
-)
-parser.add_argument("--use_norm", default=True, type=bool, help="cosine classifier.")
-parser.add_argument("--randaug_m", default=10, type=int, help="randaug-m")
-parser.add_argument("--randaug_n", default=2, type=int, help="randaug-n")
-parser.add_argument(
-    "--many_shot_thr", default=1000, type=int, help="many shot threshold"
-)
-parser.add_argument("--low_shot_thr", default=200, type=int, help="low shot threshold")
-
-# parser.add_argument('--randaug_n', default=2, type=int, help='randaug-n')
 parser.add_argument(
     "--seed", default=None, type=int, help="seed for initializing training"
 )
@@ -234,6 +105,7 @@ parser.add_argument(
     help="do logit compensation based on which set",
 )
 
+EXP_NAME = 'supcon'
 
 def main():
     user_name = "Salwa"
@@ -628,8 +500,8 @@ def main_worker(gpu, ngpus_per_node, args):
             best_few = few
             best_f1 = f1
 
-            print("features shape:", features.shape)
-            tsne_plot("./figures/", targets, features)
+            # print("features shape:", features.shape)
+            tsne_plot("./figures/", targets, features, args.store_name)
 
             # print when it updates
             print(
@@ -677,10 +549,12 @@ def train(
 
     model.train()
     end = time.time()
+
+    tsne_features = []
+    tsne_targets = []
+
     for i, data in enumerate(tqdm(train_loader)):
         inputs, targets = data
-        if i < 2:
-            print(inputs[0].shape)
         inputs = torch.cat([inputs[0], inputs[1], inputs[2]], dim=0)
         inputs, targets = inputs.cuda(), targets.cuda()
         batch_size = targets.shape[0]
@@ -689,9 +563,8 @@ def train(
         centers = centers[: args.cls_num]
         _, f2, f3 = torch.split(feat_mlp, [batch_size, batch_size, batch_size], dim=0)
 
-        # if i == 0:
-        #     my_targets = targets
-        #     my_features = f2
+        tsne_features.append(f2)
+        tsne_targets.append(targets)
 
         features = torch.cat([f2.unsqueeze(1), f3.unsqueeze(1)], dim=1)
         logits, _, __ = torch.split(logits, [batch_size, batch_size, batch_size], dim=0)
@@ -732,6 +605,9 @@ def train(
         )
     )  # TODO
 
+    tsne_targets = torch.cat(tsne_targets, dim=0)
+    tsne_features = torch.cat(tsne_features, dim=0)
+
     wandb.log(
         {
             "ce_loss_train_avg": ce_loss_all.avg,
@@ -748,7 +624,7 @@ def train(
     tf_writer.add_scalar("SCL loss/train", scl_loss_all.avg, epoch)
     tf_writer.add_scalar("acc/train_top1", top1.avg, epoch)
 
-    return targets, f2
+    return tsne_targets, tsne_features
 
 
 def validate(
@@ -930,12 +806,13 @@ def calc_f1(output, target):
     return [f1_score(target.cpu(), pred.squeeze(0).cpu(), average="macro")]
 
 
-def tsne_plot(save_dir, targets, outputs):
-    print("generating t-SNE plot...")
+def tsne_plot(save_dir, targets, outputs, store_name):
+
+    print("[INFO] generating t-SNE plot...")
     targets = targets.cpu().detach().numpy()
     outputs = outputs.cpu().detach().numpy()
-    print(targets.shape)
-    print(outputs.shape)
+    # print(targets.shape)
+    # print(outputs.shape)
     # tsne_output = bh_sne(outputs)
     tsne = TSNE(random_state=0)
     tsne_output = tsne.fit_transform(outputs)
@@ -964,7 +841,10 @@ def tsne_plot(save_dir, targets, outputs):
     plt.ylabel("tSNE 2")
     plt.legend(by_label.values(), by_label.keys())
 
-    plt.savefig(os.path.join(save_dir, "tsne.pdf"), bbox_inches="tight")
+    if(not os.path.exists(os.path.join(save_dir, store_name))):
+        os.mkdir(os.path.join(save_dir, store_name))
+        
+    plt.savefig(os.path.join(save_dir, store_name, "tsne.png"), bbox_inches="tight")
     print("done!")
 
 

@@ -312,13 +312,13 @@ def vit_small(num_classes = None, out_dim = 2048):
     :param out_dim: the dimension of the output of the model, defaults to 2048 (optional)
     :return: A model
     """
-    from vit_for_small_dataset import ViT
+    from models.vit_for_small_dataset import ViT
 
     model = ViT(
         image_size = 224,
         patch_size = 16,
         num_classes = num_classes,
-        dim = 1024,
+        dim = 2048,
         depth = 6,
         heads = 16,
         mlp_dim = 2048,
