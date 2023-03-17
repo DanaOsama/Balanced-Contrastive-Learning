@@ -36,133 +36,55 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--dataset", default="isic", choices=["inat", "isic", "aptos"])
-parser.add_argument(
-    "--data",
-    default="/l/users/salwa.khatib/proco/ISIC2018_Task3_Training_Input/",
-    metavar="DIR",
-)
-parser.add_argument(
-    "--val_data",
-    default="/l/users/salwa.khatib/proco/ISIC2018_Task3_Validation_Input/",
-    metavar="DIR",
-)
-parser.add_argument(
-    "--arch",
-    default="resnext50",
-    choices=["resnet50", "resnext50", "crossformer", "vit_small"],
-)
-parser.add_argument("--workers", default=8, type=int)
-parser.add_argument("--epochs", default=90, type=int)
-parser.add_argument("--classes", default=7, type=int)
-parser.add_argument(
-    "--temp",
-    default=0.07,
-    type=float,
-    help="scalar temperature for contrastive learning",
-)
-parser.add_argument(
-    "--start_epoch",
-    default=0,
-    type=int,
-    metavar="N",
-    help="manual epoch number (useful on restarts)",
-)
-parser.add_argument(
-    "-b",
-    "--batch-size",
-    default=128,
-    type=int,
-    metavar="N",
-    help="mini-batch size (default: 256), this is the total "
-    "batch size of all GPUs on the current node when "
-    "using Data Parallel or Distributed Data Parallel",
-)
-parser.add_argument(
-    "--lr",
-    "--learning-rate",
-    default=0.1,
-    type=float,
-    metavar="LR",
-    help="initial learning rate",
-    dest="lr",
-)
-parser.add_argument(
-    "--schedule",
-    default=[860, 880],
-    nargs="*",
-    type=int,
-    help="learning rate schedule (when to drop lr by 10x)",
-)
-parser.add_argument(
-    "--momentum", default=0.9, type=float, metavar="M", help="momentum of SGD solver"
-)
-parser.add_argument(
-    "--wd",
-    "--weight-decay",
-    default=5e-4,
-    type=float,
-    metavar="W",
-    help="weight decay (default: 1e-4)",
-    dest="weight_decay",
-)
-parser.add_argument(
-    "-p",
-    "--print_freq",
-    default=3,
-    type=int,
-    metavar="N",
-    help="print frequency (default: 20)",
-)
-parser.add_argument(
-    "-e",
-    "--evaluate",
-    dest="evaluate",
-    action="store_true",
-    help="evaluate model on validation set",
-)
-parser.add_argument(
-    "--resume",
-    default="",
-    type=str,
-    metavar="PATH",
-    help="path to latest checkpoint (default: none)",
-)
-parser.add_argument("--gpu", default=None, type=int, help="GPU id to use.")
-parser.add_argument(
-    "--alpha", default=1.0, type=float, help="cross entropy loss weight"
-)
-parser.add_argument(
-    "--beta", default=0.35, type=float, help="supervised contrastive loss weight"
-)
-parser.add_argument(
-    "--randaug",
-    default=True,
-    type=bool,
-    help="use RandAugmentation for classification branch",
-)
-parser.add_argument(
-    "--cl_views",
-    default="sim-sim",
-    type=str,
-    choices=["sim-sim", "sim-rand", "rand-rand"],
-    help="Augmentation strategy for contrastive learning views",
-)
-parser.add_argument(
-    "--feat_dim", default=1024, type=int, help="feature dimension of mlp head"
-)
-parser.add_argument("--warmup_epochs", default=0, type=int, help="warmup epochs")
-parser.add_argument("--root_log", type=str, default="log")
-parser.add_argument(
-    "--cos", default=True, type=bool, help="lr decays by cosine scheduler. "
-)
-parser.add_argument("--use_norm", default=True, type=bool, help="cosine classifier.")
-parser.add_argument("--randaug_m", default=10, type=int, help="randaug-m")
-parser.add_argument("--randaug_n", default=2, type=int, help="randaug-n")
-parser.add_argument(
-    "--many_shot_thr", default=1000, type=int, help="many shot threshold"
-)
-parser.add_argument("--low_shot_thr", default=200, type=int, help="low shot threshold")
+parser.add_argument('--dataset', default='isic', choices=['inat', 'isic', 'aptos'])
+parser.add_argument('--data', default='/l/users/salwa.khatib/proco/ISIC2018_Task3_Training_Input/', metavar='DIR')
+parser.add_argument('--val_data', default='/l/users/salwa.khatib/proco/ISIC2018_Task3_Validation_Input/', metavar='DIR')
+parser.add_argument('--arch', default='resnext50', choices=['resnet50', 'resnext50', 'crossformer', 'vit_small'])
+parser.add_argument('--workers', default=8, type=int)
+parser.add_argument('--epochs', default=90, type=int)
+parser.add_argument('--classes', default=7, type=int)
+parser.add_argument('--temp', default=0.07, type=float, help='scalar temperature for contrastive learning')
+parser.add_argument('--start_epoch', default=0, type=int, metavar='N',
+                    help='manual epoch number (useful on restarts)')
+parser.add_argument('-b', '--batch-size', default=128, type=int,
+                    metavar='N',
+                    help='mini-batch size (default: 256), this is the total '
+                         'batch size of all GPUs on the current node when '
+                         'using Data Parallel or Distributed Data Parallel')
+parser.add_argument('--lr', '--learning-rate', default=0.1, type=float,
+                    metavar='LR', help='initial learning rate', dest='lr')
+parser.add_argument('--schedule', default=[860, 880], nargs='*', type=int,
+                    help='learning rate schedule (when to drop lr by 10x)')
+parser.add_argument('--momentum', default=0.9, type=float, metavar='M',
+                    help='momentum of SGD solver')
+parser.add_argument('--wd', '--weight-decay', default=5e-4, type=float,
+                    metavar='W', help='weight decay (default: 1e-4)',
+                    dest='weight_decay')
+parser.add_argument('-p', '--print_freq', default=3, type=int,
+                    metavar='N', help='print frequency (default: 20)')
+parser.add_argument('-e', '--evaluate', dest='evaluate', action='store_true',
+                    help='evaluate model on validation set')
+parser.add_argument('--resume', default='', type=str, metavar='PATH',
+                    help='path to latest checkpoint (default: none)')
+parser.add_argument('--gpu', default=None, type=int,
+                    help='GPU id to use.')
+parser.add_argument('--alpha', default=1.0, type=float, help='cross entropy loss weight')
+parser.add_argument('--beta', default=0.35, type=float, help='supervised contrastive loss weight')
+parser.add_argument('--randaug', default=True, type=bool, help='use RandAugmentation for classification branch')
+parser.add_argument('--cl_views', default='sim-sim', type=str, choices=['sim-sim', 'sim-rand', 'rand-rand'],
+                    help='Augmentation strategy for contrastive learning views')
+parser.add_argument('--feat_dim', default=1024, type=int, help='feature dimension of mlp head')
+parser.add_argument('--warmup_epochs', default=0, type=int,
+                    help='warmup epochs')
+parser.add_argument('--root_log', type=str, default='log')
+parser.add_argument('--cos', default=True, type=bool,
+                    help='lr decays by cosine scheduler. ')
+parser.add_argument('--use_norm', default=True, type=bool,
+                    help='cosine classifier.')
+parser.add_argument('--randaug_m', default=10, type=int, help='randaug-m')
+parser.add_argument('--randaug_n', default=2, type=int, help='randaug-n')
+parser.add_argument('--many_shot_thr', default=1000, type=int, help='many shot threshold')
+parser.add_argument('--low_shot_thr', default=200, type=int, help='low shot threshold')
 parser.add_argument(
     "--seed", default=None, type=int, help="seed for initializing training"
 )
@@ -177,97 +99,75 @@ parser.add_argument(
     help="type of cross entropy loss",
 )
 parser.add_argument(
-    "--loss_req",
-    default="BCL",
-    choices=["BCL", "Supcon", "LC"],
-    help="type of loss requirement",
-)
-parser.add_argument(
     "--logit_adjust",
     default="train",
     choices=["train", "val"],
     help="do logit compensation based on which set",
 )
+parser.add_argument("--user_name", default="salwa", type=str, help="user name", choices=['salwa', 'mai', 'dana'])
 
-EXP_NAME = "supcon"
-
+EXP_NAME = 'supcon'
 
 def main():
-    user_name = "Salwa"
     args = parser.parse_args()
-    # print(vars(args))
+    user_name = args.user_name
+    wandb_entity = 'none'
 
+    if user_name == 'salwa':
+        wandb_entity = 'salwa-khatib'
+    elif user_name == 'mai':
+        wandb_entity = 'mai-cs'
+    elif user_name == 'dana':
+        wandb_entity = 'danaosama'
+        
     wandb.login()
-    # , "(64, 128, 256, 512)"
-    args.store_name = "_".join(
-        [
-            args.dataset,
-            args.arch,
-            "batchsize",
-            str(args.batch_size),
-            "epochs",
-            str(args.epochs),
-            "temp",
-            str(args.temp),
-            "lr",
-            str(args.lr),
-            args.cl_views,
-            "alpha",
-            str(args.alpha),
-            "beta",
-            str(args.beta),
-            "schedule",
-            str(args.schedule),
-            "recalibrate",
-            str(args.recalibrate),
-            user_name,
-            "ce_loss",
-            str(args.ce_loss),
-            "loss_req",
-            str(args.loss_req),
-            get_random_string(6),
-        ]
-    )
-    print("storing name: {}".format(args.store_name))
+    #, "(64, 128, 256, 512)"
+    args.store_name = '_'.join(
+<<<<<<< HEAD
+        [args.dataset, "old_augmentations",args.arch,'batchsize', str(args.batch_size), 'epochs', str(args.epochs), 'temp', str(args.temp),
+         'lr', str(args.lr), args.cl_views, 'alpha', str(args.alpha), 'beta', str(args.beta), 'schedule', str(args.schedule), 'recalibrate', str(args.recalibrate),user_name, "ce_loss", str(args.ce_loss), get_random_string(6)])
+=======
+        [args.dataset, args.arch,'batchsize', str(args.batch_size), 'epochs', str(args.epochs), 'temp', str(args.temp),
+        'lr', str(args.lr), args.cl_views, 'alpha', str(args.alpha), 'beta', str(args.beta), 'schedule', str(args.schedule), 'recalibrate', str(args.recalibrate),user_name, "ce_loss", str(args.ce_loss), get_random_string(6)])
+>>>>>>> 81daf1854989af69c1c55ea040d23dded18b3121
+    print('storing name: {}'.format(args.store_name))
 
     wandb.init(
-        # set the wandb project where this run will be logged
-        project=args.dataset,
-        # track hyperparameters and run metadata
-        config={
-            "architecture": args.arch,
-            "workers": args.workers,
-            "batch_size": args.batch_size,
-            "start_epoch": args.start_epoch,
-            "max_epochs": args.epochs,
-            "learning_rate": args.lr,
-            "momentum": args.momentum,
-            "schedule": args.schedule,
-            "weight_decay": args.weight_decay,
-            "temp": args.temp,
-            "alpha": args.alpha,  # cross entropy loss weight
-            "beta": args.beta,  # supervised contrastive loss weight
-            "cl_views": args.cl_views,  # Augmentation strategy for contrastive learning views
-            "seed": args.seed,
-            "randaug": args.randaug,
-            "randaug_m": args.randaug_m,
-            "randaug_n": args.randaug_n,
-            "cos": args.cos,  # lr decays by cosine scheduler.
-            "use_norm": args.use_norm,
-            "feat_dim": args.feat_dim,  # feature dimension of mlp head
-            "warmup_epochs": args.warmup_epochs,
-            "recalibrate": args.recalibrate,
-            "ce_loss": args.ce_loss,
-            "logit_adjust": args.logit_adjust,
-            "many_shot_thr": args.many_shot_thr,
-            "low_shot_thr": args.low_shot_thr,
-            "resume": args.resume,
-            "gpu": args.gpu,
-        },
-        # entity='bcl',
-        entity="mai-cs",
-        name=args.store_name,
-    )
+    # set the wandb project where this run will be logged
+    project=args.dataset,
+    # track hyperparameters and run metadata
+    config={
+    "architecture": args.arch,
+    "workers": args.workers,
+    "batch_size": args.batch_size,
+    "start_epoch": args.start_epoch,
+    "max_epochs": args.epochs,
+    "learning_rate": args.lr,
+    "momentum": args.momentum,
+    "schedule": args.schedule,
+    "weight_decay": args.weight_decay,
+    "temp": args.temp,
+    "alpha": args.alpha, # cross entropy loss weight
+    "beta": args.beta, # supervised contrastive loss weight
+    "cl_views": args.cl_views, # Augmentation strategy for contrastive learning views
+    "seed": args.seed,
+    "randaug": args.randaug,
+    "randaug_m": args.randaug_m,
+    "randaug_n": args.randaug_n,
+    "cos": args.cos, # lr decays by cosine scheduler.
+    "use_norm": args.use_norm,
+    "feat_dim": args.feat_dim, # feature dimension of mlp head
+    "warmup_epochs": args.warmup_epochs,
+    "recalibrate": args.recalibrate,
+    "ce_loss": args.ce_loss,
+    "logit_adjust": args.logit_adjust,
+    "many_shot_thr": args.many_shot_thr,
+    "low_shot_thr": args.low_shot_thr,
+    "resume": args.resume,
+    "gpu": args.gpu},
+    # entity='bcl',
+    entity=wandb_entity,
+    name=args.store_name)
 
     print("Wandb initialized")
 
@@ -302,19 +202,53 @@ def main_worker(gpu, ngpus_per_node, args):
         print("Use GPU: {} for training".format(args.gpu))
 
     ##########################################
-    if args.dataset == "isic":
-        args.data = "/l/users/salwa.khatib/proco/ISIC2018_Task3_Training_Input"
-        args.val_data = "/l/users/salwa.khatib/proco/ISIC2018_Task3_Validation_Input"
-        txt_train = f"/l/users/salwa.khatib/proco/ISIC2018_Task3_Training_Input/ISIC2018_Task3_Training_GroundTruth.txt"
-        txt_val = f"/l/users/salwa.khatib/proco/ISIC2018_Task3_Validation_Input/ISIC2018_Task3_Validation_GroundTruth.txt"
-    elif args.dataset == "aptos":
-        args.data = "/l/users/salwa.khatib/aptos/train_images"
-        args.val_data = "/l/users/salwa.khatib/aptos/train_images"
-        txt_train = f"/l/users/salwa.khatib/aptos/train.txt"
-        txt_val = f"/l/users/salwa.khatib/aptos/val.txt"
+    # The Salwa Branch
+    if (args.user_name).lower() == "salwa":
+        if args.dataset == "isic":
+            args.data = "/l/users/salwa.khatib/proco/ISIC2018_Task3_Training_Input"
+            args.val_data = "/l/users/salwa.khatib/proco/ISIC2018_Task3_Validation_Input"
+            txt_train = f"/l/users/salwa.khatib/proco/ISIC2018_Task3_Training_Input/ISIC2018_Task3_Training_GroundTruth.txt"
+            txt_val = f"/l/users/salwa.khatib/proco/ISIC2018_Task3_Validation_Input/ISIC2018_Task3_Validation_GroundTruth.txt"
+        elif args.dataset == "aptos":
+            args.data = "/l/users/salwa.khatib/aptos/train_images"
+            args.val_data = "/l/users/salwa.khatib/aptos/train_images"
+            txt_train = f"/l/users/salwa.khatib/aptos/train.txt"
+            txt_val = f"/l/users/salwa.khatib/aptos/val.txt"
+        else:
+            txt_train = f"dataset/iNaturalist18/iNaturalist18_train.txt"
+            txt_val = f"dataset/iNaturalist18/iNaturalist18_val.txt"
+
+    # The Dana Branch
+    elif (args.user_name).lower() == "dana":
+        if(args.dataset == 'isic'):
+            args.data = '/nfs/users/ext_group6/data/ISIC2018_Task3_Training_Input'
+            args.val_data = '/nfs/users/ext_group6/data/ISIC2018_Task3_Validation_Input'
+            txt_train = f'/nfs/users/ext_group6/data/ISIC2018_Task3_Training_GroundTruth.txt'
+            txt_val = f'/nfs/users/ext_group6/data/ISIC2018_Task3_Validation_GroundTruth.txt'
+        elif(args.dataset == 'aptos'):
+            args.data = '/nfs/users/ext_group6/data/aptos2019-blindness-detection/train_images'
+            args.val_data = '/nfs/users/ext_group6/data/aptos2019-blindness-detection/train_images'
+            txt_train = f'/nfs/users/ext_group6/Dana_Project/BCL_2/Balanced-Contrastive-Learning/aptos-split/train.txt'
+            txt_val = f'/nfs/users/ext_group6/Dana_Project/BCL_2/Balanced-Contrastive-Learning/aptos-split/val.txt'
+        else:
+            txt_train = f'dataset/iNaturalist18/iNaturalist18_train.txt'
+            txt_val = f'dataset/iNaturalist18/iNaturalist18_val.txt'
+        
+    # The ANYONE ELSE BRANCH
     else:
-        txt_train = f"dataset/iNaturalist18/iNaturalist18_train.txt"
-        txt_val = f"dataset/iNaturalist18/iNaturalist18_val.txt"
+        if(args.dataset == 'isic'):
+            args.data = '/nfs/users/ext_group6/data/ISIC2018_Task3_Training_Input'
+            args.val_data = '/nfs/users/ext_group6/data/ISIC2018_Task3_Validation_Input'
+            txt_train = f'/nfs/users/ext_group6/data/ISIC2018_Task3_Training_GroundTruth.txt'
+            txt_val = f'/nfs/users/ext_group6/data/ISIC2018_Task3_Validation_GroundTruth.txt'
+        elif(args.dataset == 'aptos'):
+            args.data = '/l/users/salwa.khatib/aptos/train_images'
+            args.val_data = '/l/users/salwa.khatib/aptos/train_images'
+            txt_train = f'/l/users/salwa.khatib/aptos/train.txt'
+            txt_val = f'/l/users/salwa.khatib/aptos/val.txt'
+        else:
+            txt_train = f'dataset/iNaturalist18/iNaturalist18_train.txt'
+            txt_val = f'dataset/iNaturalist18/iNaturalist18_val.txt'
 
     if args.dataset == "isic":
         normalize = transforms.Normalize(
@@ -331,100 +265,90 @@ def main_worker(gpu, ngpus_per_node, args):
 
     rgb_mean = (0.485, 0.456, 0.406)
 
-    ra_params = dict(
-        translate_const=int(224 * 0.45),
-        img_mean=tuple([min(255, round(255 * x)) for x in rgb_mean]),
-    )
-    if args.dataset == "aptos":
-        print("using aptos augmentations..")
-        # for aptos, we dont want to use random augmentations because baaad
-        # replaced with random equalize
-        augmentation_randncls = [
-            # transforms.RandomResizedCrop(224, scale=(0.08, 1.)),
-            transforms.Resize((224, 224)),
-            transforms.RandomHorizontalFlip(),
-            transforms.RandomApply([transforms.ColorJitter(0.4, 0.4, 0.4, 0.0)], p=1.0),
-            transforms.RandomEqualize(),
-            # rand_augment_transform('rand-n{}-m{}-mstd0.5'.format(args.randaug_n, args.randaug_m), ra_params),
-            transforms.ToTensor(),
-            normalize,
-        ]
+    ra_params = dict(translate_const=int(224 * 0.45), img_mean=tuple([min(255, round(255 * x)) for x in rgb_mean]), )
+    # if(args.dataset == 'aptos'):
+    #     print("using aptos augmentations..")
+    #     # for aptos, we dont want to use random augmentations because baaad
+    #     # replaced with random equalize
+    #     augmentation_randncls = [
+    #     # transforms.RandomResizedCrop(224, scale=(0.08, 1.)),
+    #     transforms.Resize((224,224)),
+    #     transforms.RandomHorizontalFlip(),
+    #     transforms.RandomApply([
+    #         transforms.ColorJitter(0.4, 0.4, 0.4, 0.0)
+    #     ], p=1.0),
+    #     transforms.RandomEqualize(),
+    #     # rand_augment_transform('rand-n{}-m{}-mstd0.5'.format(args.randaug_n, args.randaug_m), ra_params),
+    #     transforms.ToTensor(),
+    #     normalize,
+    #     ]
 
-        augmentation_randnclsstack = [
-            transforms.Resize((224, 224)),
-            transforms.RandomHorizontalFlip(),
-            transforms.RandomApply([transforms.ColorJitter(0.4, 0.4, 0.4, 0.1)], p=0.8),
-            # transforms.RandomGrayscale(p=0.2),
-            rand_augment_transform(
-                "rand-n{}-m{}-mstd0.5".format(args.randaug_n, args.randaug_m), ra_params
-            ),
-            transforms.ToTensor(),
-            normalize,
-        ]
+    #     augmentation_randnclsstack = [
+    #     transforms.Resize((224,224)),
+    #     transforms.RandomHorizontalFlip(),
+    #     transforms.RandomApply([
+    #         transforms.ColorJitter(0.4, 0.4, 0.4, 0.1)
+    #     ], p=0.8),
+    #     # transforms.RandomGrayscale(p=0.2),
+    #     rand_augment_transform('rand-n{}-m{}-mstd0.5'.format(args.randaug_n, args.randaug_m), ra_params),
+    #     transforms.ToTensor(),
+    #     normalize,
+    #     ]
 
-        augmentation_sim = [
-            transforms.Resize((224, 224)),
-            transforms.RandomHorizontalFlip(),
-            transforms.RandomApply(
-                [transforms.ColorJitter(0.4, 0.4, 0.4, 0.1)], p=0.8  # not strengthened
-            ),
-            # transforms.RandomGrayscale(p=0.2),
-            transforms.ToTensor(),
-            normalize,
-        ]
+    #     augmentation_sim = [
+    #     transforms.Resize((224,224)),
+    #     transforms.RandomHorizontalFlip(),
+    #     transforms.RandomApply([
+    #         transforms.ColorJitter(0.4, 0.4, 0.4, 0.1)  # not strengthened
+    #     ], p=0.8),
+    #     # transforms.RandomGrayscale(p=0.2),
+    #     transforms.ToTensor(),
+    #     normalize
+    #     ]
 
-    else:
-        augmentation_randncls = [
-            transforms.RandomResizedCrop(224, scale=(0.08, 1.0)),
-            transforms.RandomHorizontalFlip(),
-            transforms.RandomApply([transforms.ColorJitter(0.4, 0.4, 0.4, 0.0)], p=1.0),
-            rand_augment_transform(
-                "rand-n{}-m{}-mstd0.5".format(args.randaug_n, args.randaug_m), ra_params
-            ),
-            transforms.ToTensor(),
-            normalize,
-        ]
+    # else:
+    augmentation_randncls = [
+    transforms.RandomResizedCrop(224, scale=(0.08, 1.)),
+    transforms.RandomHorizontalFlip(),
+    transforms.RandomApply([
+        transforms.ColorJitter(0.4, 0.4, 0.4, 0.0)
+    ], p=1.0),
+    rand_augment_transform('rand-n{}-m{}-mstd0.5'.format(args.randaug_n, args.randaug_m), ra_params),
+    transforms.ToTensor(),
+    normalize,
+    ]
 
-        augmentation_randnclsstack = [
-            transforms.RandomResizedCrop(224),
-            transforms.RandomHorizontalFlip(),
-            transforms.RandomApply([transforms.ColorJitter(0.4, 0.4, 0.4, 0.1)], p=0.8),
-            # transforms.RandomGrayscale(p=0.2),
-            rand_augment_transform(
-                "rand-n{}-m{}-mstd0.5".format(args.randaug_n, args.randaug_m), ra_params
-            ),
-            transforms.ToTensor(),
-            normalize,
-        ]
-        augmentation_sim = [
-            transforms.RandomResizedCrop(224),
-            transforms.RandomHorizontalFlip(),
-            transforms.RandomApply(
-                [transforms.ColorJitter(0.4, 0.4, 0.4, 0.1)], p=0.8  # not strengthened
-            ),
-            # transforms.RandomGrayscale(p=0.2),
-            transforms.ToTensor(),
-            normalize,
-        ]
-
-    if args.cl_views == "sim-sim":
-        transform_train = [
-            transforms.Compose(augmentation_randncls),
-            transforms.Compose(augmentation_sim),
-            transforms.Compose(augmentation_sim),
-        ]
-    elif args.cl_views == "sim-rand":
-        transform_train = [
-            transforms.Compose(augmentation_randncls),
-            transforms.Compose(augmentation_randnclsstack),
-            transforms.Compose(augmentation_sim),
-        ]
-    elif args.cl_views == "randstack-randstack":
-        transform_train = [
-            transforms.Compose(augmentation_randncls),
-            transforms.Compose(augmentation_randnclsstack),
-            transforms.Compose(augmentation_randnclsstack),
-        ]
+    augmentation_randnclsstack = [
+        transforms.RandomResizedCrop(224),
+        transforms.RandomHorizontalFlip(),
+        transforms.RandomApply([
+            transforms.ColorJitter(0.4, 0.4, 0.4, 0.1)
+        ], p=0.8),
+        # transforms.RandomGrayscale(p=0.2),
+        rand_augment_transform('rand-n{}-m{}-mstd0.5'.format(args.randaug_n, args.randaug_m), ra_params),
+        transforms.ToTensor(),
+        normalize,
+    ]
+    augmentation_sim = [
+        transforms.RandomResizedCrop(224),
+        transforms.RandomHorizontalFlip(),
+        transforms.RandomApply([
+            transforms.ColorJitter(0.4, 0.4, 0.4, 0.1)  # not strengthened
+        ], p=0.8),
+        # transforms.RandomGrayscale(p=0.2),
+        transforms.ToTensor(),
+        normalize
+    ]
+    
+    if args.cl_views == 'sim-sim':
+        transform_train = [transforms.Compose(augmentation_randncls), transforms.Compose(augmentation_sim),
+                           transforms.Compose(augmentation_sim), ]
+    elif args.cl_views == 'sim-rand':
+        transform_train = [transforms.Compose(augmentation_randncls), transforms.Compose(augmentation_randnclsstack),
+                           transforms.Compose(augmentation_sim), ]
+    elif args.cl_views == 'randstack-randstack':
+        transform_train = [transforms.Compose(augmentation_randncls), transforms.Compose(augmentation_randnclsstack),
+                           transforms.Compose(augmentation_randnclsstack), ]
 
     else:
         raise NotImplementedError(
@@ -482,39 +406,19 @@ def main_worker(gpu, ngpus_per_node, args):
 
     # create model
     print("=> creating model '{}'".format(args.arch))
-
-    if args.arch == "resnet50":
-        model = resnext.BCLModel(
-            name="resnet50",
-            num_classes=args.cls_num,
-            feat_dim=args.feat_dim,
-            use_norm=args.use_norm,
-            recalibrate=args.recalibrate,
-        )
-    elif args.arch == "resnext50":
-        model = resnext.BCLModel(
-            name="resnext50",
-            num_classes=args.cls_num,
-            feat_dim=args.feat_dim,
-            use_norm=args.use_norm,
-            recalibrate=args.recalibrate,
-        )
-    elif args.arch == "crossformer":
-        model = resnext.BCLModel(
-            name="crossformer",
-            num_classes=args.cls_num,
-            feat_dim=args.feat_dim,
-            use_norm=args.use_norm,
-            recalibrate=args.recalibrate,
-        )
-    elif args.arch == "vit_small":
-        model = resnext.BCLModel(
-            name="vit_small",
-            num_classes=args.cls_num,
-            feat_dim=args.feat_dim,
-            use_norm=args.use_norm,
-            recalibrate=args.recalibrate,
-        )
+    
+    if args.arch == 'resnet50':
+        model = resnext.BCLModel(name='resnet50', num_classes=args.cls_num, feat_dim=args.feat_dim,
+                                use_norm=args.use_norm, recalibrate = args.recalibrate)
+    elif args.arch == 'resnext50':
+        model = resnext.BCLModel(name='resnext50', num_classes=args.cls_num, feat_dim=args.feat_dim,
+                                use_norm=args.use_norm, recalibrate = args.recalibrate)
+    elif args.arch == 'crossformer':
+        model = resnext.BCLModel(name='crossformer', num_classes=args.cls_num, feat_dim=args.feat_dim,
+                                use_norm=args.use_norm, recalibrate = args.recalibrate)
+    elif args.arch == 'vit_small':
+        model = resnext.BCLModel(name='vit_small', num_classes=args.cls_num, feat_dim=args.feat_dim,
+                                use_norm=args.use_norm, recalibrate = args.recalibrate)
     else:
         raise NotImplementedError("This model is not supported")
     print(model)
@@ -618,7 +522,7 @@ def main_worker(gpu, ngpus_per_node, args):
         adjust_lr(optimizer, epoch, args)
 
         # train for one epoch
-        targets, tsne_f1, tsne_f2 = train(
+        targets, features = train(
             train_loader,
             model,
             criterion_ce,
@@ -644,11 +548,7 @@ def main_worker(gpu, ngpus_per_node, args):
             best_f1 = f1
 
             # print("features shape:", features.shape)
-
-            if args.loss_req == "LC":
-                tsne_plot("./figures/", targets, tsne_f1, args.store_name)
-            elif args.loss_req == "BCL":
-                tsne_plot("./figures/", targets, tsne_f2, args.store_name)
+            tsne_plot("./figures/", targets, features, args.store_name)
 
             # print when it updates
             print(
@@ -697,8 +597,7 @@ def train(
     model.train()
     end = time.time()
 
-    tsne_f1 = []
-    tsne_f2 = []
+    tsne_features = []
     tsne_targets = []
 
     for i, data in enumerate(tqdm(train_loader)):
@@ -709,19 +608,16 @@ def train(
         feat_mlp, logits, centers = model(inputs, targets=targets, phase="train")
 
         centers = centers[: args.cls_num]
-        f1, f2, f3 = torch.split(feat_mlp, [batch_size, batch_size, batch_size], dim=0)
+        _, f2, f3 = torch.split(feat_mlp, [batch_size, batch_size, batch_size], dim=0)
 
-        tsne_f1.append(f1)
-        tsne_f2.append(f2)
+        tsne_features.append(f2)
         tsne_targets.append(targets)
 
         features = torch.cat([f2.unsqueeze(1), f3.unsqueeze(1)], dim=1)
         logits, _, __ = torch.split(logits, [batch_size, batch_size, batch_size], dim=0)
         scl_loss = criterion_scl(centers, features, targets)
         ce_loss = criterion_ce(logits, targets)
-        # TODO remove scl_loss
-        # loss = args.alpha * ce_loss + args.beta * scl_loss
-        loss = args.alpha * ce_loss
+        loss = args.alpha * ce_loss + args.beta * scl_loss
 
         ce_loss_all.update(ce_loss.item(), batch_size)
         scl_loss_all.update(scl_loss.item(), batch_size)
@@ -775,7 +671,7 @@ def train(
     tf_writer.add_scalar("SCL loss/train", scl_loss_all.avg, epoch)
     tf_writer.add_scalar("acc/train_top1", top1.avg, epoch)
 
-    return tsne_targets, tsne_f1, tsne_f2
+    return tsne_targets, tsne_features
 
 
 def validate(
@@ -984,13 +880,15 @@ def tsne_plot(save_dir, targets, outputs, store_name):
         alpha=0.8,
     )
 
+    # plt.scatter(tsne_output[0], tsne_output[1], c=targets, cmap="jet")
+
     plt.xticks([])
     plt.yticks([])
     plt.xlabel("tSNE 1")
     plt.ylabel("tSNE 2")
     plt.legend(by_label.values(), by_label.keys())
 
-    if not os.path.exists(os.path.join(save_dir, store_name)):
+    if(not os.path.exists(os.path.join(save_dir, store_name))):
         os.mkdir(os.path.join(save_dir, store_name))
 
     plt.savefig(os.path.join(save_dir, store_name, "tsne.png"), bbox_inches="tight")
