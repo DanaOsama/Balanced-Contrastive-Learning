@@ -7,4 +7,5 @@ models/__pycache__
 wandb/
 train-isic.sh
 train.sh
+train-isic-dana.sbatch
 figures/

@@ -104,19 +104,27 @@ parser.add_argument(
     choices=["train", "val"],
     help="do logit compensation based on which set",
 )
+parser.add_argument("--user_name", default="salwa", type=str, help="user name", choices=['salwa', 'mai', 'dana'])
 
 EXP_NAME = 'supcon'
 
 def main():
-    user_name = "Salwa"
     args = parser.parse_args()
-    # print(vars(args))
+    user_name = args.user_name
+    wandb_entity = 'none'
 
+    if user_name == 'salwa':
+        wandb_entity = 'salwa-khatib'
+    elif user_name == 'mai':
+        wandb_entity = 'mai-cs'
+    elif user_name == 'dana':
+        wandb_entity = 'danaosama'
+        
     wandb.login()
     #, "(64, 128, 256, 512)"
     args.store_name = '_'.join(
         [args.dataset, args.arch,'batchsize', str(args.batch_size), 'epochs', str(args.epochs), 'temp', str(args.temp),
-         'lr', str(args.lr), args.cl_views, 'alpha', str(args.alpha), 'beta', str(args.beta), 'schedule', str(args.schedule), 'recalibrate', str(args.recalibrate),user_name, "ce_loss", str(args.ce_loss), get_random_string(6)])
+        'lr', str(args.lr), args.cl_views, 'alpha', str(args.alpha), 'beta', str(args.beta), 'schedule', str(args.schedule), 'recalibrate', str(args.recalibrate),user_name, "ce_loss", str(args.ce_loss), get_random_string(6)])
     print('storing name: {}'.format(args.store_name))
 
     wandb.init(
@@ -153,7 +161,7 @@ def main():
     "resume": args.resume,
     "gpu": args.gpu},
     # entity='bcl',
-    entity='salwa-khatib',
+    entity=wandb_entity,
     name=args.store_name)
 
     print("Wandb initialized")
@@ -189,19 +197,53 @@ def main_worker(gpu, ngpus_per_node, args):
         print("Use GPU: {} for training".format(args.gpu))
 
     ##########################################
-    if args.dataset == "isic":
-        args.data = "/l/users/salwa.khatib/proco/ISIC2018_Task3_Training_Input"
-        args.val_data = "/l/users/salwa.khatib/proco/ISIC2018_Task3_Validation_Input"
-        txt_train = f"/l/users/salwa.khatib/proco/ISIC2018_Task3_Training_Input/ISIC2018_Task3_Training_GroundTruth.txt"
-        txt_val = f"/l/users/salwa.khatib/proco/ISIC2018_Task3_Validation_Input/ISIC2018_Task3_Validation_GroundTruth.txt"
-    elif args.dataset == "aptos":
-        args.data = "/l/users/salwa.khatib/aptos/train_images"
-        args.val_data = "/l/users/salwa.khatib/aptos/train_images"
-        txt_train = f"/l/users/salwa.khatib/aptos/train.txt"
-        txt_val = f"/l/users/salwa.khatib/aptos/val.txt"
+    # The Salwa Branch
+    if (args.user_name).lower() == "salwa":
+        if args.dataset == "isic":
+            args.data = "/l/users/salwa.khatib/proco/ISIC2018_Task3_Training_Input"
+            args.val_data = "/l/users/salwa.khatib/proco/ISIC2018_Task3_Validation_Input"
+            txt_train = f"/l/users/salwa.khatib/proco/ISIC2018_Task3_Training_Input/ISIC2018_Task3_Training_GroundTruth.txt"
+            txt_val = f"/l/users/salwa.khatib/proco/ISIC2018_Task3_Validation_Input/ISIC2018_Task3_Validation_GroundTruth.txt"
+        elif args.dataset == "aptos":
+            args.data = "/l/users/salwa.khatib/aptos/train_images"
+            args.val_data = "/l/users/salwa.khatib/aptos/train_images"
+            txt_train = f"/l/users/salwa.khatib/aptos/train.txt"
+            txt_val = f"/l/users/salwa.khatib/aptos/val.txt"
+        else:
+            txt_train = f"dataset/iNaturalist18/iNaturalist18_train.txt"
+            txt_val = f"dataset/iNaturalist18/iNaturalist18_val.txt"
+
+    # The Dana Branch
+    elif (args.user_name).lower() == "dana":
+        if(args.dataset == 'isic'):
+            args.data = '/nfs/users/ext_group6/data/ISIC2018_Task3_Training_Input'
+            args.val_data = '/nfs/users/ext_group6/data/ISIC2018_Task3_Validation_Input'
+            txt_train = f'/nfs/users/ext_group6/data/ISIC2018_Task3_Training_GroundTruth.txt'
+            txt_val = f'/nfs/users/ext_group6/data/ISIC2018_Task3_Validation_GroundTruth.txt'
+        elif(args.dataset == 'aptos'):
+            args.data = '/nfs/users/ext_group6/data/aptos2019-blindness-detection/train_images'
+            args.val_data = '/nfs/users/ext_group6/data/aptos2019-blindness-detection/train_images'
+            txt_train = f'/nfs/users/ext_group6/Dana_Project/BCL_2/Balanced-Contrastive-Learning/aptos-split/train.txt'
+            txt_val = f'/nfs/users/ext_group6/Dana_Project/BCL_2/Balanced-Contrastive-Learning/aptos-split/val.txt'
+        else:
+            txt_train = f'dataset/iNaturalist18/iNaturalist18_train.txt'
+            txt_val = f'dataset/iNaturalist18/iNaturalist18_val.txt'
+        
+    # The ANYONE ELSE BRANCH
     else:
-        txt_train = f"dataset/iNaturalist18/iNaturalist18_train.txt"
-        txt_val = f"dataset/iNaturalist18/iNaturalist18_val.txt"
+        if(args.dataset == 'isic'):
+            args.data = '/nfs/users/ext_group6/data/ISIC2018_Task3_Training_Input'
+            args.val_data = '/nfs/users/ext_group6/data/ISIC2018_Task3_Validation_Input'
+            txt_train = f'/nfs/users/ext_group6/data/ISIC2018_Task3_Training_GroundTruth.txt'
+            txt_val = f'/nfs/users/ext_group6/data/ISIC2018_Task3_Validation_GroundTruth.txt'
+        elif(args.dataset == 'aptos'):
+            args.data = '/l/users/salwa.khatib/aptos/train_images'
+            args.val_data = '/l/users/salwa.khatib/aptos/train_images'
+            txt_train = f'/l/users/salwa.khatib/aptos/train.txt'
+            txt_val = f'/l/users/salwa.khatib/aptos/val.txt'
+        else:
+            txt_train = f'dataset/iNaturalist18/iNaturalist18_train.txt'
+            txt_val = f'dataset/iNaturalist18/iNaturalist18_val.txt'
 
     if args.dataset == "isic":
         normalize = transforms.Normalize(
