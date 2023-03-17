@@ -7,3 +7,4 @@ models/__pycache__
 wandb/
 train-isic.sh
 train.sh
+figures/
