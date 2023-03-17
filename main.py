@@ -190,7 +190,7 @@ parser.add_argument(
 )
 parser.add_argument(
     "--user_name",
-    default="salwa",
+    default="mai",
     type=str,
     help="user name",
     choices=["salwa", "mai", "dana"],
@@ -778,9 +778,9 @@ def train(
         feat_mlp, logits, centers = model(inputs, targets=targets, phase="train")
 
         centers = centers[: args.cls_num]
-        _, f2, f3 = torch.split(feat_mlp, [batch_size, batch_size, batch_size], dim=0)
+        f_1, f2, f3 = torch.split(feat_mlp, [batch_size, batch_size, batch_size], dim=0)
 
-        tsne_f1.append(f1)
+        tsne_f1.append(f_1)
         tsne_f2.append(f2)
         tsne_targets.append(targets)
 
@@ -824,7 +824,8 @@ def train(
     )  # TODO
 
     tsne_targets = torch.cat(tsne_targets, dim=0)
-    tsne_features = torch.cat(tsne_features, dim=0)
+    tsne_f1 = torch.cat(tsne_f1, dim=0)
+    tsne_f2 = torch.cat(tsne_f2, dim=0)
 
     wandb.log(
         {
