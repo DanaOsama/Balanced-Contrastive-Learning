@@ -1,10 +1,10 @@
 log/
 slurm-logs/
-__pycache__/
-dataset/__pycache__/
-loss/__pycache__/
-models/__pycache__
-wandb/
+__pycache__/**
+dataset/__pycache__/**
+loss/__pycache__/**
+models/__pycache__/**
+wandb/**
 train-isic.sh
 train.sh
 train-isic-dana.sbatch
