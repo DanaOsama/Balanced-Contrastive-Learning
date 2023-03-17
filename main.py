@@ -826,7 +826,6 @@ def train(
     tsne_targets = torch.cat(tsne_targets, dim=0)
     tsne_f1 = torch.cat(tsne_f1, dim=0)
     tsne_f2 = torch.cat(tsne_f2, dim=0)
-
     wandb.log(
         {
             "ce_loss_train_avg": ce_loss_all.avg,
