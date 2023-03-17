@@ -115,7 +115,7 @@ def main():
     wandb.login()
     #, "(64, 128, 256, 512)"
     args.store_name = '_'.join(
-        [args.dataset, args.arch,'batchsize', str(args.batch_size), 'epochs', str(args.epochs), 'temp', str(args.temp),
+        [args.dataset, "old_augmentations",args.arch,'batchsize', str(args.batch_size), 'epochs', str(args.epochs), 'temp', str(args.temp),
          'lr', str(args.lr), args.cl_views, 'alpha', str(args.alpha), 'beta', str(args.beta), 'schedule', str(args.schedule), 'recalibrate', str(args.recalibrate),user_name, "ce_loss", str(args.ce_loss), get_random_string(6)])
     print('storing name: {}'.format(args.store_name))
 
@@ -219,25 +219,60 @@ def main_worker(gpu, ngpus_per_node, args):
     rgb_mean = (0.485, 0.456, 0.406)
 
     ra_params = dict(translate_const=int(224 * 0.45), img_mean=tuple([min(255, round(255 * x)) for x in rgb_mean]), )
-    if(args.dataset == 'aptos'):
-        print("using aptos augmentations..")
-        # for aptos, we dont want to use random augmentations because baaad
-        # replaced with random equalize
-        augmentation_randncls = [
-        # transforms.RandomResizedCrop(224, scale=(0.08, 1.)),
-        transforms.Resize((224,224)),
-        transforms.RandomHorizontalFlip(),
-        transforms.RandomApply([
-            transforms.ColorJitter(0.4, 0.4, 0.4, 0.0)
-        ], p=1.0),
-        transforms.RandomEqualize(),
-        # rand_augment_transform('rand-n{}-m{}-mstd0.5'.format(args.randaug_n, args.randaug_m), ra_params),
-        transforms.ToTensor(),
-        normalize,
-        ]
+    # if(args.dataset == 'aptos'):
+    #     print("using aptos augmentations..")
+    #     # for aptos, we dont want to use random augmentations because baaad
+    #     # replaced with random equalize
+    #     augmentation_randncls = [
+    #     # transforms.RandomResizedCrop(224, scale=(0.08, 1.)),
+    #     transforms.Resize((224,224)),
+    #     transforms.RandomHorizontalFlip(),
+    #     transforms.RandomApply([
+    #         transforms.ColorJitter(0.4, 0.4, 0.4, 0.0)
+    #     ], p=1.0),
+    #     transforms.RandomEqualize(),
+    #     # rand_augment_transform('rand-n{}-m{}-mstd0.5'.format(args.randaug_n, args.randaug_m), ra_params),
+    #     transforms.ToTensor(),
+    #     normalize,
+    #     ]
 
-        augmentation_randnclsstack = [
-        transforms.Resize((224,224)),
+    #     augmentation_randnclsstack = [
+    #     transforms.Resize((224,224)),
+    #     transforms.RandomHorizontalFlip(),
+    #     transforms.RandomApply([
+    #         transforms.ColorJitter(0.4, 0.4, 0.4, 0.1)
+    #     ], p=0.8),
+    #     # transforms.RandomGrayscale(p=0.2),
+    #     rand_augment_transform('rand-n{}-m{}-mstd0.5'.format(args.randaug_n, args.randaug_m), ra_params),
+    #     transforms.ToTensor(),
+    #     normalize,
+    #     ]
+
+    #     augmentation_sim = [
+    #     transforms.Resize((224,224)),
+    #     transforms.RandomHorizontalFlip(),
+    #     transforms.RandomApply([
+    #         transforms.ColorJitter(0.4, 0.4, 0.4, 0.1)  # not strengthened
+    #     ], p=0.8),
+    #     # transforms.RandomGrayscale(p=0.2),
+    #     transforms.ToTensor(),
+    #     normalize
+    #     ]
+
+    # else:
+    augmentation_randncls = [
+    transforms.RandomResizedCrop(224, scale=(0.08, 1.)),
+    transforms.RandomHorizontalFlip(),
+    transforms.RandomApply([
+        transforms.ColorJitter(0.4, 0.4, 0.4, 0.0)
+    ], p=1.0),
+    rand_augment_transform('rand-n{}-m{}-mstd0.5'.format(args.randaug_n, args.randaug_m), ra_params),
+    transforms.ToTensor(),
+    normalize,
+    ]
+
+    augmentation_randnclsstack = [
+        transforms.RandomResizedCrop(224),
         transforms.RandomHorizontalFlip(),
         transforms.RandomApply([
             transforms.ColorJitter(0.4, 0.4, 0.4, 0.1)
@@ -246,10 +281,9 @@ def main_worker(gpu, ngpus_per_node, args):
         rand_augment_transform('rand-n{}-m{}-mstd0.5'.format(args.randaug_n, args.randaug_m), ra_params),
         transforms.ToTensor(),
         normalize,
-        ]
-
-        augmentation_sim = [
-        transforms.Resize((224,224)),
+    ]
+    augmentation_sim = [
+        transforms.RandomResizedCrop(224),
         transforms.RandomHorizontalFlip(),
         transforms.RandomApply([
             transforms.ColorJitter(0.4, 0.4, 0.4, 0.1)  # not strengthened
@@ -257,42 +291,8 @@ def main_worker(gpu, ngpus_per_node, args):
         # transforms.RandomGrayscale(p=0.2),
         transforms.ToTensor(),
         normalize
-        ]
-
-    else:
-        augmentation_randncls = [
-        transforms.RandomResizedCrop(224, scale=(0.08, 1.)),
-        transforms.RandomHorizontalFlip(),
-        transforms.RandomApply([
-            transforms.ColorJitter(0.4, 0.4, 0.4, 0.0)
-        ], p=1.0),
-        rand_augment_transform('rand-n{}-m{}-mstd0.5'.format(args.randaug_n, args.randaug_m), ra_params),
-        transforms.ToTensor(),
-        normalize,
-        ]
-
-        augmentation_randnclsstack = [
-            transforms.RandomResizedCrop(224),
-            transforms.RandomHorizontalFlip(),
-            transforms.RandomApply([
-                transforms.ColorJitter(0.4, 0.4, 0.4, 0.1)
-            ], p=0.8),
-            # transforms.RandomGrayscale(p=0.2),
-            rand_augment_transform('rand-n{}-m{}-mstd0.5'.format(args.randaug_n, args.randaug_m), ra_params),
-            transforms.ToTensor(),
-            normalize,
-        ]
-        augmentation_sim = [
-            transforms.RandomResizedCrop(224),
-            transforms.RandomHorizontalFlip(),
-            transforms.RandomApply([
-                transforms.ColorJitter(0.4, 0.4, 0.4, 0.1)  # not strengthened
-            ], p=0.8),
-            # transforms.RandomGrayscale(p=0.2),
-            transforms.ToTensor(),
-            normalize
-        ]
-        
+    ]
+    
     if args.cl_views == 'sim-sim':
         transform_train = [transforms.Compose(augmentation_randncls), transforms.Compose(augmentation_sim),
                            transforms.Compose(augmentation_sim), ]
@@ -843,7 +843,7 @@ def tsne_plot(save_dir, targets, outputs, store_name):
 
     if(not os.path.exists(os.path.join(save_dir, store_name))):
         os.mkdir(os.path.join(save_dir, store_name))
-        
+
     plt.savefig(os.path.join(save_dir, store_name, "tsne.png"), bbox_inches="tight")
     print("done!")
 

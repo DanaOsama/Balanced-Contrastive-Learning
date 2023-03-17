@@ -320,8 +320,8 @@ def vit_small(num_classes = None, out_dim = 2048):
         num_classes = num_classes,
         dim = 2048,
         depth = 6,
-        heads = 16,
-        mlp_dim = 2048,
+        heads = 8,
+        mlp_dim = 128,
         dropout = 0.1,
         emb_dropout = 0.1
     )        
