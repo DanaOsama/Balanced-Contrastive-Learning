@@ -3,6 +3,8 @@ from torch import Tensor
 import torch.nn as nn
 from typing import Type, Any, Callable, Union, List, Optional
 import torch.nn.functional as F
+from torch.utils import model_zoo
+from torchvision.models.resnet import model_urls
 import math
 
 
@@ -249,9 +251,19 @@ def _resnet(
         arch: str,
         block: Type[Union[BasicBlock, Bottleneck]],
         layers: List[int],
+        pretrained: bool,
         **kwargs: Any
 ) -> ResNet:
     model = ResNet(block, layers, **kwargs)
+    if(pretrained):
+        if(arch == 'resnet50'):
+            print("Loading pretrained weights from: " + model_urls['resnet50'] + "...")
+            model.load_state_dict(model_zoo.load_url(model_urls['resnet50']), strict=False)
+        elif(arch == 'resnext50'):
+            print("Loading pretrained weights from: " + model_urls['resnet50'] + "...")
+            model.load_state_dict(model_zoo.load_url(model_urls['resnext50']), strict=False)
+
+    
     return model
 
 
@@ -262,7 +274,7 @@ def resnet50(num_classes = None, pretrained: bool = False, progress: bool = True
         pretrained (bool): If True, returns a model pre-trained on ImageNet
         progress (bool): If True, displays a progress bar of the download to stderr
     """
-    return _resnet('resnet50', Bottleneck, [3, 4, 6, 3],
+    return _resnet('resnet50', Bottleneck, [3, 4, 6, 3], pretrained,
                    **kwargs)
 
 
@@ -275,7 +287,7 @@ def resnext50(num_classes = None, pretrained: bool = False, progress: bool = Tru
     """
     kwargs['groups'] = 32
     kwargs['width_per_group'] = 4
-    return _resnet('resnext50_32x4d', Bottleneck, [3, 4, 6, 3], **kwargs)
+    return _resnet('resnext50_32x4d', Bottleneck, [3, 4, 6, 3], pretrained ,**kwargs)
 
 def crossformer(num_classes = None, out_dim = 2048):
     """
@@ -371,10 +383,10 @@ class PrototypeRecalibrator():
 
 
 class BCLModel(nn.Module):
-    def __init__(self, num_classes=1000, name='resnet50', head='mlp', use_norm=True, feat_dim=1024, recalibrate = False, beta = 0.95, initial_wc = 0.01):
+    def __init__(self, num_classes=1000, name='resnet50', head='mlp', use_norm=True, feat_dim=1024, recalibrate = False, beta = 0.95, initial_wc = 0.01, pretrained=False):
         super(BCLModel, self).__init__()
         model_fun, dim_in = model_dict[name]
-        self.encoder = model_fun(num_classes = num_classes)
+        self.encoder = model_fun(num_classes = num_classes, pretrained=pretrained)
         if head == 'mlp':
             self.head = nn.Sequential(nn.Linear(dim_in, dim_in), nn.BatchNorm1d(dim_in), nn.ReLU(inplace=True),
                                       nn.Linear(dim_in, feat_dim))
