@@ -5,7 +5,7 @@ from torchvision.transforms import transforms
 from torch.utils.data import DataLoader
 import torch.nn.functional as F
 from loss.contrastive import BalSCL, SCL
-from loss.logitadjust import LogitAdjust, FocalLoss, FocalLC
+from loss.logitadjust import LogitAdjust, FocalLoss, FocalLC, LabelSmoothingCrossEntropy
 import math
 from tensorboardX import SummaryWriter
 from dataset.mydataset import MyDataset
@@ -173,7 +173,7 @@ parser.add_argument(
 parser.add_argument(
     "--ce_loss",
     default="LC",
-    choices=["LC", "Focal", "FocalLC"],
+    choices=["LC", "Focal", "FocalLC", "LS"],
     help="type of cross entropy loss",
 )
 parser.add_argument(
@@ -214,13 +214,6 @@ def main():
         wandb_entity = "danaosama"
 
     wandb.login()
-<<<<<<< HEAD
-    #, "(64, 128, 256, 512)"
-    args.store_name = '_'.join(
-        [args.dataset, args.arch, 'batchsize', str(args.batch_size), 'epochs', str(args.epochs), 'temp', str(args.temp),
-         'lr', str(args.lr), args.cl_views, 'alpha', str(args.alpha), 'beta', str(args.beta), 'schedule', str(args.schedule), 'recalibrate', str(args.recalibrate),user_name, "ce_loss", str(args.ce_loss), get_random_string(6)])
-    print('storing name: {}'.format(args.store_name))
-=======
     # , "(64, 128, 256, 512)"
     args.store_name = "_".join(
         [
@@ -252,7 +245,6 @@ def main():
         ]
     )
     print("storing name: {}".format(args.store_name))
->>>>>>> fdc5a9671b46e442c7d62193b8c27392d4b13bb6
 
     wandb.init(
         # set the wandb project where this run will be logged
@@ -647,6 +639,9 @@ def main_worker(gpu, ngpus_per_node, args):
     elif args.ce_loss == "FocalLC":
         print("[INFO] Using focal loss with logit compensation")
         criterion_ce = FocalLC(cls_num_list).cuda(args.gpu)
+    elif args.ce_loss == "LS":
+        print("[INFO] Using label smoothing")
+        criterion_ce = LabelSmoothingCrossEntropy().cuda(args.gpu)
     else:
         raise ValueError(f"{str(args.ce_loss)} not supported")
 
@@ -713,6 +708,11 @@ def main_worker(gpu, ngpus_per_node, args):
             train_loader, val_loader, model, criterion_ce, epoch, args, tf_writer
         )
 
+        if args.loss_req == "LC":
+            tsne_plot("./figures/", targets, tsne_f1, args.store_name)
+        elif args.loss_req == "BCL":
+            tsne_plot("./figures/", targets, tsne_f2, args.store_name)
+
         # remember best acc@1 and save checkpoint
         is_best = acc1 > best_acc1
         best_acc1 = max(acc1, best_acc1)
@@ -721,12 +721,6 @@ def main_worker(gpu, ngpus_per_node, args):
             best_med = med
             best_few = few
             best_f1 = f1
-
-            # print("features shape:", features.shape)
-            if args.loss_req == "LC":
-                tsne_plot("./figures/", targets, tsne_f1, args.store_name)
-            elif args.loss_req == "BCL":
-                tsne_plot("./figures/", targets, tsne_f2, args.store_name)
 
             # print when it updates
             print(
