@@ -4,7 +4,7 @@ import shutil
 from torchvision.transforms import transforms
 from torch.utils.data import DataLoader
 import torch.nn.functional as F
-from loss.contrastive import BalSCL
+from loss.contrastive import BalSCL, SCL
 from loss.logitadjust import LogitAdjust, FocalLoss, FocalLC
 import math
 from tensorboardX import SummaryWriter
@@ -123,13 +123,8 @@ def main():
     wandb.login()
     #, "(64, 128, 256, 512)"
     args.store_name = '_'.join(
-<<<<<<< HEAD
-        [args.dataset, "old_augmentations",args.arch,'batchsize', str(args.batch_size), 'epochs', str(args.epochs), 'temp', str(args.temp),
+        [args.dataset, args.arch, 'batchsize', str(args.batch_size), 'epochs', str(args.epochs), 'temp', str(args.temp),
          'lr', str(args.lr), args.cl_views, 'alpha', str(args.alpha), 'beta', str(args.beta), 'schedule', str(args.schedule), 'recalibrate', str(args.recalibrate),user_name, "ce_loss", str(args.ce_loss), get_random_string(6)])
-=======
-        [args.dataset, args.arch,'batchsize', str(args.batch_size), 'epochs', str(args.epochs), 'temp', str(args.temp),
-        'lr', str(args.lr), args.cl_views, 'alpha', str(args.alpha), 'beta', str(args.beta), 'schedule', str(args.schedule), 'recalibrate', str(args.recalibrate),user_name, "ce_loss", str(args.ce_loss), get_random_string(6)])
->>>>>>> 81daf1854989af69c1c55ea040d23dded18b3121
     print('storing name: {}'.format(args.store_name))
 
     wandb.init(
@@ -477,6 +472,7 @@ def main_worker(gpu, ngpus_per_node, args):
         raise ValueError(f"{str(args.ce_loss)} not supported")
 
     criterion_scl = BalSCL(cls_num_list, args.temp).cuda(args.gpu)
+    # criterion_scl = SCL().cuda(args.gpu)
 
     tf_writer = SummaryWriter(log_dir=os.path.join(args.root_log, args.store_name))
 
@@ -616,6 +612,7 @@ def train(
         features = torch.cat([f2.unsqueeze(1), f3.unsqueeze(1)], dim=1)
         logits, _, __ = torch.split(logits, [batch_size, batch_size, batch_size], dim=0)
         scl_loss = criterion_scl(centers, features, targets)
+        # scl_loss = criterion_scl(features, targets)
         ce_loss = criterion_ce(logits, targets)
         loss = args.alpha * ce_loss + args.beta * scl_loss
 
