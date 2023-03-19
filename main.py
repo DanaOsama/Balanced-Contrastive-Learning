@@ -355,8 +355,8 @@ def main_worker(gpu, ngpus_per_node, args):
             args.val_data = (
                 "/nfs/users/ext_group6/data/aptos2019-blindness-detection/train_images"
             )
-            txt_train = f"/nfs/users/ext_group6/Dana_Project/BCL_2/Balanced-Contrastive-Learning/aptos-split/train.txt"
-            txt_val = f"/nfs/users/ext_group6/Dana_Project/BCL_2/Balanced-Contrastive-Learning/aptos-split/val.txt"
+            txt_train = f"/nfs/users/ext_group6/data/aptos2019-blindness-detection/aptos-split/train.txt"
+            txt_val = f"/nfs/users/ext_group6/data/aptos2019-blindness-detection/aptos-split/val.txt"
         else:
             txt_train = f"dataset/iNaturalist18/iNaturalist18_train.txt"
             txt_val = f"dataset/iNaturalist18/iNaturalist18_val.txt"
