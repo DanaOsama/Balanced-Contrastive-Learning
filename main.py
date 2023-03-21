@@ -708,10 +708,10 @@ def main_worker(gpu, ngpus_per_node, args):
             train_loader, val_loader, model, criterion_ce, epoch, args, tf_writer
         )
 
-        if args.loss_req == "LC":
-            tsne_plot("./figures/", targets, tsne_f1, args.store_name)
-        elif args.loss_req == "BCL":
-            tsne_plot("./figures/", targets, tsne_f2, args.store_name)
+        # if args.loss_req == "LC":
+        #     tsne_plot("./figures/", targets, tsne_f1, args.store_name)
+        # elif args.loss_req == "BCL":
+        #     tsne_plot("./figures/", targets, tsne_f2, args.store_name)
 
         # remember best acc@1 and save checkpoint
         is_best = acc1 > best_acc1
