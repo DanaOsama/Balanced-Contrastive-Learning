@@ -62,6 +62,12 @@ parser.add_argument(
     help="scalar temperature for contrastive learning",
 )
 parser.add_argument(
+    "--delayed_start",
+    default=False,
+    type=bool,
+    help="start contrastive learning delayed",
+)
+parser.add_argument(
     "--start_epoch",
     default=0,
     type=int,
@@ -257,6 +263,7 @@ def main():
             "start_epoch": args.start_epoch,
             "max_epochs": args.epochs,
             "learning_rate": args.lr,
+            "delayed_start": args.delayed_start,
             "momentum": args.momentum,
             "schedule": args.schedule,
             "weight_decay": args.weight_decay,
@@ -789,10 +796,14 @@ def train(
 
         features = torch.cat([f2.unsqueeze(1), f3.unsqueeze(1)], dim=1)
         logits, _, __ = torch.split(logits, [batch_size, batch_size, batch_size], dim=0)
+        
         scl_loss = criterion_scl(centers, features, targets)
         # scl_loss = criterion_scl(features, targets)
         ce_loss = criterion_ce(logits, targets)
-        loss = args.alpha * ce_loss + args.beta * scl_loss
+        if(args.delayed_start and epoch > 100):
+            loss = args.alpha * ce_loss * 2 
+        else:
+            loss = args.alpha * ce_loss + args.beta * scl_loss
 
         ce_loss_all.update(ce_loss.item(), batch_size)
         scl_loss_all.update(scl_loss.item(), batch_size)

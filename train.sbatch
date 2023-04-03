@@ -10,4 +10,4 @@
 #SBATCH --time=12:00:00             # Specify the time needed for your experiment
 #SBATCH --qos=gpu-8                 # To enable the use of up to 8 GPUs
 
-sh train.sh
+sh train-isic.sh
