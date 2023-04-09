@@ -799,9 +799,12 @@ def train(
         
         scl_loss = criterion_scl(centers, features, targets)
         # scl_loss = criterion_scl(features, targets)
+        print("##########################")
+        print(logits.shape, targets.shape)
+        print("##########################")
         ce_loss = criterion_ce(logits, targets)
-        if(args.delayed_start and epoch > 100):
-            loss = args.alpha * ce_loss * 2 
+        if(args.delayed_start and epoch > 50):
+            loss = args.alpha * ce_loss  
         else:
             loss = args.alpha * ce_loss + args.beta * scl_loss
 

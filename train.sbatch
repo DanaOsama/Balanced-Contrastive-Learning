@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=bcl-new            # Job name
+#SBATCH --job-name=bcl-aptos           # Job name
 #SBATCH --output=slurm-logs/bcl.%A_%a.txt   # Standard output and error log
 #SBATCH --nodes=1                   # Run all processes on a single node    
 #SBATCH --ntasks=1                  # Run on a single CPU
@@ -10,4 +10,4 @@
 #SBATCH --time=12:00:00             # Specify the time needed for your experiment
 #SBATCH --qos=gpu-8                 # To enable the use of up to 8 GPUs
 
-sh train-isic.sh
+sh train.sh

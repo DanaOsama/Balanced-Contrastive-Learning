@@ -381,6 +381,30 @@ class PrototypeRecalibrator():
             new_prototypes[i] = prototypes[i] + math.log(self.wc[i])
         return new_prototypes
 
+class PrototypeStore():
+    def __init__(self, num_classes, feat_dim, device):
+        self.num_classes = num_classes
+        self.feat_dim = feat_dim
+        self.device = device
+        self.prototypes = torch.zeros((num_classes, feat_dim), dtype=torch.float64, device=device)
+        self.num_prototypes = torch.zeros(num_classes, dtype=torch.int32, device=device)
+    
+    def update(self, features, targets):
+        # update based on a batch of data
+        # print("targets: ",targets)
+        # print(self.num_classes)
+        # print(prototypes.shape)
+        bs = int(features.shape[0] / 3)
+        f1, _, _ = torch.split(features, [bs, bs, bs], dim=0)
+        for i in range(self.num_classes):
+            indices = [j for j, x in enumerate(targets.tolist()) if x == i]
+            N = len(indices)
+            features_i = f1[indices]
+            if(N == 0):
+                continue
+            N = (1 / N)
+            self.prototypes[i] = (self.prototypes[i] * self.num_prototypes[i] + N * torch.sum(features_i, dim=0)) / (self.num_prototypes[i] + N)
+            self.num_prototypes[i] += N
 
 class BCLModel(nn.Module):
     def __init__(self, num_classes=1000, name='resnet50', head='mlp', use_norm=True, feat_dim=1024, recalibrate = False, beta = 0.95, initial_wc = 0.01, pretrained=False):

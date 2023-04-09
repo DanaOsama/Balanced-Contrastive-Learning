@@ -70,3 +70,15 @@ class LabelSmoothingCrossEntropy(nn.Module):
         loss = reduce_loss(-log_preds.sum(dim=-1), self.reduction)
         nll = F.nll_loss(log_preds, target, reduction=self.reduction)
         return linear_combination(loss / n, nll, self.epsilon)
+
+class VarifocalLoss(nn.Module):
+    # Varifocal loss by Zhang et al. https://arxiv.org/abs/2008.13367
+    def __init__(self):
+        super().__init__()
+
+    def forward(self, pred_score, gt_score, label, alpha=0.75, gamma=2.0):
+        weight = alpha * pred_score.sigmoid().pow(gamma) * (1 - label) + gt_score * label
+        with torch.cuda.amp.autocast(enabled=False):
+            loss = (F.binary_cross_entropy_with_logits(pred_score.float(), gt_score.float(), reduction='none') *
+                    weight).sum()
+        return loss
