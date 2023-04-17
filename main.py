@@ -5,7 +5,7 @@ from torchvision.transforms import transforms
 from torch.utils.data import DataLoader
 import torch.nn.functional as F
 from loss.contrastive import BalSCL, SCL
-from loss.logitadjust import LogitAdjust, FocalLoss, FocalLC, LabelSmoothingCrossEntropy
+from loss.logitadjust import LogitAdjust, FocalLoss, FocalLC, EQLv2
 import math
 from tensorboardX import SummaryWriter
 from dataset.mydataset import MyDataset
@@ -179,7 +179,7 @@ parser.add_argument(
 parser.add_argument(
     "--ce_loss",
     default="LC",
-    choices=["LC", "Focal", "FocalLC", "LS"],
+    choices=["LC", "Focal", "FocalLC", "LS", "EQLv2"],
     help="type of cross entropy loss",
 )
 parser.add_argument(
@@ -649,6 +649,9 @@ def main_worker(gpu, ngpus_per_node, args):
     elif args.ce_loss == "LS":
         print("[INFO] Using label smoothing")
         criterion_ce = LabelSmoothingCrossEntropy().cuda(args.gpu)
+    elif args.ce_loss == "EQLv2":
+        print("[INFO] Using EQLv2 loss")
+        criterion_ce = EQLv2(num_classes = args.classes).cuda(args.gpu)
     else:
         raise ValueError(f"{str(args.ce_loss)} not supported")
 
@@ -799,9 +802,6 @@ def train(
         
         scl_loss = criterion_scl(centers, features, targets)
         # scl_loss = criterion_scl(features, targets)
-        print("##########################")
-        print(logits.shape, targets.shape)
-        print("##########################")
         ce_loss = criterion_ce(logits, targets)
         if(args.delayed_start and epoch > 50):
             loss = args.alpha * ce_loss  

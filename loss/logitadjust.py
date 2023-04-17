@@ -3,6 +3,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
+from functools import partial
 
 
 class LogitAdjust(nn.Module):
@@ -53,32 +54,5 @@ class FocalLC(nn.Module):
 def linear_combination(x, y, epsilon):
     return epsilon * x + (1 - epsilon) * y
 
-
 def reduce_loss(loss, reduction='mean'):
     return loss.mean() if reduction == 'mean' else loss.sum() if reduction == 'sum' else loss
-
-
-class LabelSmoothingCrossEntropy(nn.Module):
-    def __init__(self, epsilon: float = 0.1, reduction='mean'):
-        super().__init__()
-        self.epsilon = epsilon
-        self.reduction = reduction
-
-    def forward(self, x, target):
-        n = x.size()[-1]
-        log_preds = F.log_softmax(x, dim=-1)
-        loss = reduce_loss(-log_preds.sum(dim=-1), self.reduction)
-        nll = F.nll_loss(log_preds, target, reduction=self.reduction)
-        return linear_combination(loss / n, nll, self.epsilon)
-
-class VarifocalLoss(nn.Module):
-    # Varifocal loss by Zhang et al. https://arxiv.org/abs/2008.13367
-    def __init__(self):
-        super().__init__()
-
-    def forward(self, pred_score, gt_score, label, alpha=0.75, gamma=2.0):
-        weight = alpha * pred_score.sigmoid().pow(gamma) * (1 - label) + gt_score * label
-        with torch.cuda.amp.autocast(enabled=False):
-            loss = (F.binary_cross_entropy_with_logits(pred_score.float(), gt_score.float(), reduction='none') *
-                    weight).sum()
-        return loss
