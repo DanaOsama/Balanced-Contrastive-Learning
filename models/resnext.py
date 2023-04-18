@@ -20,17 +20,14 @@ class NormedLinear(nn.Module):
         out = F.normalize(x, dim=1).mm(F.normalize(self.weight, dim=0))
         return self.s * out
 
-
 def conv3x3(in_planes: int, out_planes: int, stride: int = 1, groups: int = 1, dilation: int = 1) -> nn.Conv2d:
     """3x3 convolution with padding"""
     return nn.Conv2d(in_planes, out_planes, kernel_size=3, stride=stride,
                      padding=dilation, groups=groups, bias=False, dilation=dilation)
 
-
 def conv1x1(in_planes: int, out_planes: int, stride: int = 1) -> nn.Conv2d:
     """1x1 convolution"""
     return nn.Conv2d(in_planes, out_planes, kernel_size=1, stride=stride, bias=False)
-
 
 class BasicBlock(nn.Module):
     expansion: int = 1
@@ -79,7 +76,6 @@ class BasicBlock(nn.Module):
         out = self.relu(out)
 
         return out
-
 
 class Bottleneck(nn.Module):
     # Bottleneck in torchvision places the stride for downsampling at 3x3 convolution(self.conv2)
@@ -137,7 +133,6 @@ class Bottleneck(nn.Module):
         out = self.relu(out)
 
         return out
-
 
 class ResNet(nn.Module):
 
@@ -246,7 +241,6 @@ class ResNet(nn.Module):
     def forward(self, x: Tensor) -> Tensor:
         return self._forward_impl(x)
 
-
 def _resnet(
         arch: str,
         block: Type[Union[BasicBlock, Bottleneck]],
@@ -266,7 +260,6 @@ def _resnet(
     
     return model
 
-
 def resnet50(num_classes = None, pretrained: bool = False, progress: bool = True, **kwargs: Any) -> ResNet:
     r"""ResNet-50 model from
     `"Deep Residual Learning for Image Recognition" <https://arxiv.org/pdf/1512.03385.pdf>`_.
@@ -276,7 +269,6 @@ def resnet50(num_classes = None, pretrained: bool = False, progress: bool = True
     """
     return _resnet('resnet50', Bottleneck, [3, 4, 6, 3], pretrained,
                    **kwargs)
-
 
 def resnext50(num_classes = None, pretrained: bool = False, progress: bool = True, **kwargs: Any) -> ResNet:
     r"""ResNeXt-50 32x4d model from
@@ -313,7 +305,6 @@ def crossformer(num_classes = None, out_dim = 2048):
         out_dim =  out_dim         
     )
     return model
-
 
 def vit_small(num_classes = None, out_dim = 2048):
     """
@@ -388,8 +379,8 @@ class PrototypeStore():
         self.device = device
         self.momentum = momentum
         self.prototypes = torch.zeros((num_classes, feat_dim), dtype=torch.float64, device=device)
-        self.queue = torch.zeros((num_classes, queue_size, feat_dim), dtype=torch.float64, device=device)
-        # self.num_prototypes = torch.zeros(num_classes, dtype=torch.int32, device=device)
+        self.queue = [[] for _ in range(num_classes)]
+        self.queue_size = queue_size
     
     @torch.no_grad()
     def update_prototypes(self, features, targets):
@@ -399,14 +390,31 @@ class PrototypeStore():
         batch_size = int(targets.shape[0])
         features, _ , _ = torch.split(features, [batch_size, batch_size, batch_size], dim=0)
         # update the queue
-        self.queue[targets] = torch.cat((self.queue[targets][:,1:,:], features.view(batch_size, 1, self.feat_dim)), dim=1)
+        for clas in range(self.num_classes):
+            class_features = features[targets == clas]
+            num_class_features = class_features.shape[0]
+            # number of empty elements in the queue
+            num_empty = self.queue_size - len(self.queue[clas])
+            if(num_empty == 0):
+                # empty the queue
+                self.queue[clas] = []
+            if num_class_features > num_empty:
+                self.queue[clas].extend(class_features[:num_empty])
+            elif num_class_features > 0 and (num_class_features <= num_empty):
+                self.queue[clas].extend(class_features)
+        # turn the queue into a tensor
+        for clas in range(self.num_classes):
+            if(len(self.queue[clas]) > 0):
+                self.queue[clas] = torch.stack(self.queue[clas])
         # update the prototypes
-        self.prototypes[targets] = self.momentum * self.prototypes[targets] + (1 - self.momentum) * torch.mean(self.queue[targets], dim=1)
-    
+        for clas in range(self.num_classes):
+            if(len(self.queue[clas]) > 0):
+                new = torch.mean(self.queue[clas], dim=0)
+                self.prototypes[clas] = self.momentum * self.prototypes[clas] + (1 - self.momentum) * new
+
     def get_prototypes(self):
         return self.prototypes
         
-
 class BCLModel(nn.Module):
     def __init__(self, num_classes=1000, name='resnet50', head='mlp', use_norm=True, feat_dim=1024, recalibrate = False, beta = 0.99, initial_wc = 0.01, pretrained=False, ema_prototypes = False):
         super(BCLModel, self).__init__()
@@ -437,8 +445,8 @@ class BCLModel(nn.Module):
         feat_mlp = F.normalize(self.head(feat), dim=1)
         logits = self.fc(feat)
         if(self.ema_prototypes):
-            self.prototype_store.update_prototypes(feat, targets)
-            centers_logits = F.normalize(self.head_fc(self.prototype_store.get_prototypes().T), dim=1)
+            self.prototype_store.update_prototypes(feat_mlp, targets)
+            centers_logits = F.normalize(self.head_fc(self.prototype_store.get_prototypes()), dim=1)
         else:
             centers_logits = F.normalize(self.head_fc(self.fc.weight.T), dim=1) # prototypes
 
