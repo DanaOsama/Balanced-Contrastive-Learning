@@ -1,4 +1,4 @@
-APTOS mean channel 1:  tensor(0.4138, device='cuda:0')
+APTOS mean channel 1:  tensor(0.4138, device='cuda:0')11
 APTOS mean channel 2:  tensor(0.2210, device='cuda:0')
 APTOS mean channel 3:  tensor(0.0737, device='cuda:0')
 APTOS std channel 1:  tensor(0.2389, device='cuda:0')
