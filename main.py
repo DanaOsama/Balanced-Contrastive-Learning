@@ -5,7 +5,7 @@ from torchvision.transforms import transforms
 from torch.utils.data import DataLoader
 import torch.nn.functional as F
 from loss.contrastive import BalSCL, SCL
-from loss.logitadjust import LogitAdjust, FocalLoss, FocalLC, EQLv2
+from loss.logitadjust import LogitAdjust, FocalLoss, FocalLC
 import math
 from tensorboardX import SummaryWriter
 from dataset.mydataset import MyDataset
@@ -204,6 +204,9 @@ parser.add_argument(
 parser.add_argument(
     "--pretrained", default=False, type=bool, help="use pretrained model"
 )
+parser.add_argument(
+    "--ema_prototypes", default=False, type=bool, help="use ema updates to get prototypes"
+)
 EXP_NAME = "supcon"
 
 
@@ -240,13 +243,15 @@ def main():
             str(args.beta),
             "schedule",
             str(args.schedule),
-            "recalibrate",
+            "recalibrate-beta0.99",
             str(args.recalibrate),
             user_name,
             "ce_loss",
             str(args.ce_loss),
             "pretrained",
             str(args.pretrained),
+            "prototype_ema",
+            str(args.ema_prototypes),
             get_random_string(6),
         ]
     )
@@ -556,6 +561,8 @@ def main_worker(gpu, ngpus_per_node, args):
 
     # create model
     print("=> creating model '{}'".format(args.arch))
+    if(args.ema_prototypes):
+        print("=> using EMA prototypes")
     if args.arch == "resnet50":
         model = resnext.BCLModel(
             name="resnet50",
@@ -564,6 +571,7 @@ def main_worker(gpu, ngpus_per_node, args):
             use_norm=args.use_norm,
             recalibrate=args.recalibrate,
             pretrained=args.pretrained,
+            ema_prototypes=args.ema_prototypes,
         )
     elif args.arch == "resnext50":
         model = resnext.BCLModel(
@@ -573,6 +581,7 @@ def main_worker(gpu, ngpus_per_node, args):
             use_norm=args.use_norm,
             recalibrate=args.recalibrate,
             pretrained=args.pretrained,
+            ema_prototypes=args.ema_prototypes,
         )
     elif args.arch == "crossformer":
         model = resnext.BCLModel(
@@ -582,6 +591,7 @@ def main_worker(gpu, ngpus_per_node, args):
             use_norm=args.use_norm,
             recalibrate=args.recalibrate,
             pretrained=args.pretrained,
+            ema_prototypes=args.ema_prototypes,
         )
     elif args.arch == "vit_small":
         model = resnext.BCLModel(
@@ -591,6 +601,7 @@ def main_worker(gpu, ngpus_per_node, args):
             use_norm=args.use_norm,
             recalibrate=args.recalibrate,
             pretrained=args.pretrained,
+            ema_prototypes=args.ema_prototypes,
         )
     else:
         raise NotImplementedError("This model is not supported")

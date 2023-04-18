@@ -382,32 +382,33 @@ class PrototypeRecalibrator():
         return new_prototypes
 
 class PrototypeStore():
-    def __init__(self, num_classes, feat_dim, device):
+    def __init__(self, num_classes, feat_dim, device, momentum = 0.9, queue_size = 100):
         self.num_classes = num_classes
         self.feat_dim = feat_dim
         self.device = device
+        self.momentum = momentum
         self.prototypes = torch.zeros((num_classes, feat_dim), dtype=torch.float64, device=device)
-        self.num_prototypes = torch.zeros(num_classes, dtype=torch.int32, device=device)
+        self.queue = torch.zeros((num_classes, queue_size, feat_dim), dtype=torch.float64, device=device)
+        # self.num_prototypes = torch.zeros(num_classes, dtype=torch.int32, device=device)
     
-    def update(self, features, targets):
-        # update based on a batch of data
-        # print("targets: ",targets)
-        # print(self.num_classes)
-        # print(prototypes.shape)
-        bs = int(features.shape[0] / 3)
-        f1, _, _ = torch.split(features, [bs, bs, bs], dim=0)
-        for i in range(self.num_classes):
-            indices = [j for j, x in enumerate(targets.tolist()) if x == i]
-            N = len(indices)
-            features_i = f1[indices]
-            if(N == 0):
-                continue
-            N = (1 / N)
-            self.prototypes[i] = (self.prototypes[i] * self.num_prototypes[i] + N * torch.sum(features_i, dim=0)) / (self.num_prototypes[i] + N)
-            self.num_prototypes[i] += N
+    @torch.no_grad()
+    def update_prototypes(self, features, targets):
+        '''
+        Updates the centroids of the clusters
+        '''
+        batch_size = int(targets.shape[0])
+        features, _ , _ = torch.split(features, [batch_size, batch_size, batch_size], dim=0)
+        # update the queue
+        self.queue[targets] = torch.cat((self.queue[targets][:,1:,:], features.view(batch_size, 1, self.feat_dim)), dim=1)
+        # update the prototypes
+        self.prototypes[targets] = self.momentum * self.prototypes[targets] + (1 - self.momentum) * torch.mean(self.queue[targets], dim=1)
+    
+    def get_prototypes(self):
+        return self.prototypes
+        
 
 class BCLModel(nn.Module):
-    def __init__(self, num_classes=1000, name='resnet50', head='mlp', use_norm=True, feat_dim=1024, recalibrate = False, beta = 0.95, initial_wc = 0.01, pretrained=False):
+    def __init__(self, num_classes=1000, name='resnet50', head='mlp', use_norm=True, feat_dim=1024, recalibrate = False, beta = 0.99, initial_wc = 0.01, pretrained=False, ema_prototypes = False):
         super(BCLModel, self).__init__()
         model_fun, dim_in = model_dict[name]
         self.encoder = model_fun(num_classes = num_classes, pretrained=pretrained)
@@ -425,6 +426,9 @@ class BCLModel(nn.Module):
         self.head_fc = nn.Sequential(nn.Linear(dim_in, dim_in), nn.BatchNorm1d(dim_in), nn.ReLU(inplace=True),
                                    nn.Linear(dim_in, feat_dim))
         self.recalibrate = recalibrate
+        self.ema_prototypes = ema_prototypes
+        if(self.ema_prototypes):
+            self.prototype_store = PrototypeStore(num_classes, feat_dim, 'cuda')
         if(self.recalibrate):
             self.recalibrator = PrototypeRecalibrator(beta=beta, initial_wc=initial_wc, num_classes=num_classes)
 
@@ -432,7 +436,12 @@ class BCLModel(nn.Module):
         feat = self.encoder(x)
         feat_mlp = F.normalize(self.head(feat), dim=1)
         logits = self.fc(feat)
-        centers_logits = F.normalize(self.head_fc(self.fc.weight.T), dim=1) # prototypes
+        if(self.ema_prototypes):
+            self.prototype_store.update_prototypes(feat, targets)
+            centers_logits = F.normalize(self.head_fc(self.prototype_store.get_prototypes().T), dim=1)
+        else:
+            centers_logits = F.normalize(self.head_fc(self.fc.weight.T), dim=1) # prototypes
+
         # TODO: recalibrate logits
         if(self.recalibrate and phase == 'train'):
             self.recalibrator.update(centers_logits, feat_mlp, targets) #update recalibrator
