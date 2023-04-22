@@ -339,10 +339,15 @@ model_dict = {
 }
 
 class PrototypeRecalibrator():
-    def __init__(self, beta, initial_wc, num_classes):
+    def __init__(self, beta, initial_wc, num_classes, cls_num_list, static = False, tau = 1.0):
         self.beta = beta # smoothing coefficient
         self.wc = [initial_wc for _ in range(num_classes)]
         self.num_classes = num_classes
+        cls_num_list = torch.cuda.FloatTensor(cls_num_list)
+        cls_p_list = cls_num_list / cls_num_list.sum()
+        m_list = tau * torch.log(cls_p_list)
+        self.m_list = m_list.view(1, -1)
+        self.static = static
     
     def update(self, prototypes, features, targets):
         # update based on a batch of data
@@ -366,8 +371,10 @@ class PrototypeRecalibrator():
             self.wc[i] = (self.beta * self.wc[i] + (1 - self.beta) * wc_batch).item()
     
     def recalibrate(self, prototypes):
-        # recalibrate prototypes
         new_prototypes = prototypes.clone()
+        # recalibrate prototypes
+        if(self.static):
+            return new_prototypes + self.m_list.reshape(self.num_classes, -1)
         for i in range(self.num_classes):
             new_prototypes[i] = prototypes[i] + math.log(self.wc[i])
         return new_prototypes
@@ -416,7 +423,7 @@ class PrototypeStore():
         return self.prototypes
         
 class BCLModel(nn.Module):
-    def __init__(self, num_classes=1000, name='resnet50', head='mlp', use_norm=True, feat_dim=1024, recalibrate = False, beta = 0.99, initial_wc = 0.01, pretrained=False, ema_prototypes = False):
+    def __init__(self, num_classes=1000, name='resnet50', head='mlp', use_norm=True, feat_dim=1024, recalibrate = False, beta = 0.99, initial_wc = 0.01, pretrained=False, cls_num_list = [], ema_prototypes = False, static = False):
         super(BCLModel, self).__init__()
         model_fun, dim_in = model_dict[name]
         self.encoder = model_fun(num_classes = num_classes, pretrained=pretrained)
@@ -438,7 +445,7 @@ class BCLModel(nn.Module):
         if(self.ema_prototypes):
             self.prototype_store = PrototypeStore(num_classes, feat_dim, 'cuda')
         if(self.recalibrate):
-            self.recalibrator = PrototypeRecalibrator(beta=beta, initial_wc=initial_wc, num_classes=num_classes)
+            self.recalibrator = PrototypeRecalibrator(beta=beta, initial_wc=initial_wc, num_classes=num_classes, cls_num_list = cls_num_list, static = static)
 
     def forward(self, x, targets=None, phase='train'):
         feat = self.encoder(x)

@@ -5,7 +5,7 @@ from torchvision.transforms import transforms
 from torch.utils.data import DataLoader
 import torch.nn.functional as F
 from loss.contrastive import BalSCL, SCL
-from loss.logitadjust import LogitAdjust, FocalLoss, FocalLC
+from loss.logitadjust import LogitAdjust, FocalLoss, FocalLC, EQLv2
 import math
 from tensorboardX import SummaryWriter
 from dataset.mydataset import MyDataset
@@ -175,6 +175,12 @@ parser.add_argument(
 parser.add_argument("--reload", default=False, type=bool, help="load supervised model")
 parser.add_argument(
     "--recalibrate", default=False, type=bool, help="recalibrate prototypes"
+)
+parser.add_argument(
+    "--recalibrate_static",
+    default=False,
+    type=bool,
+    help="recalibrate prototypes statically"
 )
 parser.add_argument(
     "--ce_loss",
@@ -572,6 +578,8 @@ def main_worker(gpu, ngpus_per_node, args):
             recalibrate=args.recalibrate,
             pretrained=args.pretrained,
             ema_prototypes=args.ema_prototypes,
+            cls_num_list=cls_num_list,
+            static = args.recalibrate_static
         )
     elif args.arch == "resnext50":
         model = resnext.BCLModel(
@@ -582,6 +590,8 @@ def main_worker(gpu, ngpus_per_node, args):
             recalibrate=args.recalibrate,
             pretrained=args.pretrained,
             ema_prototypes=args.ema_prototypes,
+            cls_num_list=cls_num_list,
+            static = args.recalibrate_static
         )
     elif args.arch == "crossformer":
         model = resnext.BCLModel(
@@ -592,6 +602,8 @@ def main_worker(gpu, ngpus_per_node, args):
             recalibrate=args.recalibrate,
             pretrained=args.pretrained,
             ema_prototypes=args.ema_prototypes,
+            cls_num_list=cls_num_list,
+            static = args.recalibrate_static
         )
     elif args.arch == "vit_small":
         model = resnext.BCLModel(
@@ -602,6 +614,8 @@ def main_worker(gpu, ngpus_per_node, args):
             recalibrate=args.recalibrate,
             pretrained=args.pretrained,
             ema_prototypes=args.ema_prototypes,
+            cls_num_list=cls_num_list,
+            static = args.recalibrate_static
         )
     else:
         raise NotImplementedError("This model is not supported")
@@ -794,7 +808,7 @@ def train(
     tsne_f2 = []
     tsne_targets = []
 
-    for i, data in enumerate(tqdm(train_loader)):
+    for i, data in enumerate(train_loader):
         inputs, targets = data
         inputs = torch.cat([inputs[0], inputs[1], inputs[2]], dim=0)
         inputs, targets = inputs.cuda(), targets.cuda()
