@@ -378,14 +378,15 @@ class PrototypeRecalibrator():
         for i in range(self.num_classes):
             new_prototypes[i] = prototypes[i] + math.log(self.wc[i])
         return new_prototypes
+    
 
 class PrototypeStore():
-    def __init__(self, num_classes, feat_dim, device, momentum = 0.9, queue_size = 100):
+    def __init__(self, num_classes, feat_dim, device, momentum = 0.95, queue_size = 100):
         self.num_classes = num_classes
         self.feat_dim = feat_dim
         self.device = device
         self.momentum = momentum
-        self.prototypes = torch.zeros((num_classes, feat_dim), dtype=torch.float64, device=device)
+        self.prototypes = torch.zeros((num_classes, feat_dim), dtype=torch.float32, device=device)
         self.queue = [[] for _ in range(num_classes)]
         self.queue_size = queue_size
     
@@ -396,6 +397,7 @@ class PrototypeStore():
         '''
         batch_size = int(targets.shape[0])
         features, _ , _ = torch.split(features, [batch_size, batch_size, batch_size], dim=0)
+
         # update the queue
         for clas in range(self.num_classes):
             class_features = features[targets == clas]
@@ -409,16 +411,15 @@ class PrototypeStore():
                 self.queue[clas].extend(class_features[:num_empty])
             elif num_class_features > 0 and (num_class_features <= num_empty):
                 self.queue[clas].extend(class_features)
-        # turn the queue into a tensor
-        for clas in range(self.num_classes):
-            if(len(self.queue[clas]) > 0):
-                self.queue[clas] = torch.stack(self.queue[clas])
+
         # update the prototypes
         for clas in range(self.num_classes):
-            if(len(self.queue[clas]) > 0):
-                new = torch.mean(self.queue[clas], dim=0)
+            if(len(self.queue[clas]) == self.queue_size):
+                new = torch.mean(torch.stack(self.queue[clas]), dim=0).to(self.device)
                 self.prototypes[clas] = self.momentum * self.prototypes[clas] + (1 - self.momentum) * new
-
+                # empty the queue
+                self.queue[clas] = []
+    
     def get_prototypes(self):
         return self.prototypes
         
@@ -443,7 +444,7 @@ class BCLModel(nn.Module):
         self.recalibrate = recalibrate
         self.ema_prototypes = ema_prototypes
         if(self.ema_prototypes):
-            self.prototype_store = PrototypeStore(num_classes, feat_dim, 'cuda')
+            self.prototype_store = PrototypeStore(num_classes, 2048, 'cuda')
         if(self.recalibrate):
             self.recalibrator = PrototypeRecalibrator(beta=beta, initial_wc=initial_wc, num_classes=num_classes, cls_num_list = cls_num_list, static = static)
 
@@ -451,9 +452,9 @@ class BCLModel(nn.Module):
         feat = self.encoder(x)
         feat_mlp = F.normalize(self.head(feat), dim=1)
         logits = self.fc(feat)
-        if(self.ema_prototypes):
-            self.prototype_store.update_prototypes(feat_mlp, targets)
-            centers_logits = F.normalize(self.head_fc(self.prototype_store.get_prototypes()), dim=1)
+        if(self.ema_prototypes and phase =="train"):
+            self.prototype_store.update_prototypes(feat, targets)
+            centers_logits = F.normalize(self.head_fc(self.prototype_store.get_prototypes().type(torch.float32)), dim=1)
         else:
             centers_logits = F.normalize(self.head_fc(self.fc.weight.T), dim=1) # prototypes
 
