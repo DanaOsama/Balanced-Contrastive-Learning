@@ -185,7 +185,7 @@ parser.add_argument(
 parser.add_argument(
     "--ce_loss",
     default="LC",
-    choices=["LC", "Focal", "FocalLC", "LS", "EQLv2"],
+    choices=["LC", "Focal", "FocalLC", "LS", "EQLv2", "WeightedBCE"],
     help="type of cross entropy loss",
 )
 parser.add_argument(
@@ -262,7 +262,7 @@ def main():
         ]
     )
     print("storing name: {}".format(args.store_name))
-
+    print("queue size 200")
     wandb.init(
         # set the wandb project where this run will be logged
         project=args.dataset,
@@ -677,6 +677,10 @@ def main_worker(gpu, ngpus_per_node, args):
     elif args.ce_loss == "EQLv2":
         print("[INFO] Using EQLv2 loss")
         criterion_ce = EQLv2(num_classes = args.classes).cuda(args.gpu)
+    elif args.ce_loss == "WeightedBCE":
+        print("[INFO] Using weighted BCE loss")
+        class_weights = torch.tensor([1 - (x / sum(cls_num_list)) for x in cls_num_list], device=args.gpu)
+        criterion_ce = nn.BCEWithLogitsLoss(pos_weight = class_weights).cuda(args.gpu)
     else:
         raise ValueError(f"{str(args.ce_loss)} not supported")
 
@@ -827,7 +831,11 @@ def train(
         
         scl_loss = criterion_scl(centers, features, targets)
         # scl_loss = criterion_scl(features, targets)
-        ce_loss = criterion_ce(logits, targets)
+        if(args.ce_loss == "WeightedBCE"):
+            targets_onehot = torch.nn.functional.one_hot(targets, num_classes=args.cls_num).float()
+            ce_loss = criterion_ce(logits, targets_onehot)
+        else:    
+            ce_loss = criterion_ce(logits, targets)
         if(args.delayed_start and epoch > 50):
             loss = args.alpha * ce_loss  
         else:
@@ -913,7 +921,11 @@ def validate(
             inputs, targets = inputs.cuda(), targets.cuda()
             batch_size = targets.size(0)
             feat_mlp, logits, centers = model(inputs, phase="val")
-            ce_loss = criterion_ce(logits, targets)
+            if(args.ce_loss == "WeightedBCE"):
+                targets_onehot = torch.nn.functional.one_hot(targets, num_classes=args.cls_num).float()
+                ce_loss = criterion_ce(logits, targets_onehot)
+            else:
+                ce_loss = criterion_ce(logits, targets)
 
             total_logits = torch.cat((total_logits, logits))
             total_labels = torch.cat((total_labels, targets))

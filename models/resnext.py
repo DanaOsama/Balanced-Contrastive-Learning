@@ -381,7 +381,7 @@ class PrototypeRecalibrator():
     
 
 class PrototypeStore():
-    def __init__(self, num_classes, feat_dim, device, momentum = 0.95, queue_size = 100):
+    def __init__(self, num_classes, feat_dim, device, momentum = 0.95, queue_size = 200):
         self.num_classes = num_classes
         self.feat_dim = feat_dim
         self.device = device
